@@ -19,10 +19,11 @@ code{background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:13px}
 .note{background:#fff8e1;border-left:4px solid #f0a500;padding:10px 14px;margin:14px 0}
 img{max-width:100%}
 section[lang="en"]{display:none}
+.langbar a{color:#fff;text-decoration:none;font-size:13px;margin-left:12px;opacity:.9}.langbar a:hover{opacity:1;text-decoration:underline}
 </style></head><body>
 
 <div class="langbar"><span class="t">🌐 Beijing AQ Datathon · 成果总览</span>
-<button id="btnZh" class="active" onclick="setLang('zh')">中文</button>
+<a href="index.html">Overview</a><a href="report-eda.html">EDA</a><a href="report-error.html">Errors</a><a href="report-insights.html">Insights</a><button id="btnZh" class="active" onclick="setLang('zh')">中文</button>
 <button id="btnEn" onclick="setLang('en')">English</button></div>
 
 <section lang="zh">
@@ -53,9 +54,9 @@ section[lang="en"]{display:none}
 <h2>3. 报告（点击打开，均含中英切换）</h2>
 <table>
 <tr><th>报告</th><th>内容</th></tr>
-<tr><td><a href="1_数据探索EDA报告.html">1_数据探索EDA报告.html</a></td><td>数据全貌：分布/站点/季节/相关性/Box-Cox λ/基线</td></tr>
-<tr><td><a href="2_模型误差分析.html">2_模型误差分析.html</a></td><td>模型在哪失效：18.4% 重污染行 = 80.3% 误差</td></tr>
-<tr><td><a href="3_洞察故事包_演示底稿.html">3_洞察故事包_演示底稿.html</a></td><td>周一演示叙事 + 公共卫生建议</td></tr>
+<tr><td><a href="report-eda.html">report-eda.html</a></td><td>数据全貌：分布/站点/季节/相关性/Box-Cox λ/基线</td></tr>
+<tr><td><a href="report-error.html">report-error.html</a></td><td>模型在哪失效：18.4% 重污染行 = 80.3% 误差</td></tr>
+<tr><td><a href="report-insights.html">report-insights.html</a></td><td>周一演示叙事 + 公共卫生建议</td></tr>
 </table>
 <h2>4. 关键图表</h2>
 <p><img src="fig4_feature_importance.png" style="max-width:640px"></p>
@@ -95,9 +96,9 @@ section[lang="en"]{display:none}
 <h2>3. Reports (click to open, each with CN/EN toggle)</h2>
 <table>
 <tr><th>Report</th><th>Content</th></tr>
-<tr><td><a href="1_数据探索EDA报告.html">1_数据探索EDA报告.html</a></td><td>Full EDA: distribution/stations/seasonality/correlations/Box-Cox λ/baselines</td></tr>
-<tr><td><a href="2_模型误差分析.html">2_模型误差分析.html</a></td><td>Where the model fails: 18.4% of heavy-pollution rows = 80.3% of error</td></tr>
-<tr><td><a href="3_洞察故事包_演示底稿.html">3_洞察故事包_演示底稿.html</a></td><td>Presentation narrative + public-health implications</td></tr>
+<tr><td><a href="report-eda.html">report-eda.html</a></td><td>Full EDA: distribution/stations/seasonality/correlations/Box-Cox λ/baselines</td></tr>
+<tr><td><a href="report-error.html">report-error.html</a></td><td>Where the model fails: 18.4% of heavy-pollution rows = 80.3% of error</td></tr>
+<tr><td><a href="report-insights.html">report-insights.html</a></td><td>Presentation narrative + public-health implications</td></tr>
 </table>
 <h2>4. Key Figures</h2>
 <p><img src="fig4_feature_importance.png" style="max-width:640px"></p>
