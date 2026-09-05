@@ -1,0 +1,905 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">
+<title>1_数据探索EDA报告 · 中文 / English</title><style>
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;max-width:960px;margin:0 auto;padding:70px 20px 40px;color:#222;line-height:1.7;background:#fafbfc}
+.langbar{position:fixed;top:0;left:0;right:0;background:#1F4E79;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:99;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.langbar .t{font-weight:bold;margin-right:auto}
+.langbar button{background:#fff;color:#1F4E79;border:none;border-radius:4px;padding:6px 16px;cursor:pointer;font-size:14px;font-weight:bold}
+.langbar button.active{background:#f0a500;color:#fff}
+section[lang="en"]{display:none}
+h1{border-bottom:3px solid #1F4E79;padding-bottom:8px;color:#1F4E79}
+h2{border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:36px;color:#1F4E79}
+h3{color:#333;margin-top:24px}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid #d0d0d0;padding:6px 10px;text-align:left;font-size:14px}
+th{background:#1F4E79;color:#fff}
+tr:nth-child(even){background:#f4f7fa}
+img{max-width:100%;border:1px solid #ddd;margin:8px 0}
+code{background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:13px}
+blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;background:#f4f7fa;color:#444}
+</style></head><body>
+<div class="langbar"><span class="t">🌐 1_数据探索EDA报告</span>
+<button id="btnZh" class="active" onclick="setLang('zh')">中文</button>
+<button id="btnEn" onclick="setLang('en')">English</button></div>
+<section lang="zh"><h1>Beijing Multi-Site Air Quality — EDA 深潜 + Box-Cox λ 测定 + 统计基线</h1>
+<blockquote>
+<p>数据: <code>train.csv</code> (全量 360,954 行) · 生成时间: 2026-09-05 · 脚本: <code>scripts/eda_compute.py</code> → <code>reports/eda_numbers.json</code> → <code>scripts/render_eda_report.py</code>
+铁律: 本报告所有数字均由 Python 实际运行产出(见文末【溯源与复现】),未手工转写。</p>
+</blockquote>
+<h2>0. 数据概况</h2>
+<ul>
+<li>行数 <strong>360,954</strong> × 列数 19;时间范围 2013-03-01 00:00:00 → 2016-08-31 22:00:00 (2013-03-01 → 2016-08-31,共 42 个月)</li>
+<li>站点 12 个: Aotizhongxin, Changping, Dingling, Dongsi, Guanyuan, Gucheng, Huairou, Nongzhanguan, Shunyi, Tiantan, Wanliu, Wanshouxigong</li>
+<li>目标列 <code>PM2_5_next_hour</code> 缺失 = <strong>0 行</strong>;数据中<strong>无 current_PM2_5 列</strong>(禁止用 PM2.5 历史做特征,泄漏红线)</li>
+</ul>
+<h2>1. 目标变量分布</h2>
+<p><img alt="fig1" src="fig1_target_distribution.png" /></p>
+<table>
+<thead>
+<tr>
+<th>统计量</th>
+<th>值</th>
+<th>统计量</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>count</td>
+<td>360,954</td>
+<td>skew</td>
+<td>2.01</td>
+</tr>
+<tr>
+<td>mean</td>
+<td>78.0</td>
+<td>median</td>
+<td>55</td>
+</tr>
+<tr>
+<td>std</td>
+<td>77.8</td>
+<td>min / max</td>
+<td>2 / 999 (封顶)</td>
+</tr>
+<tr>
+<td>分位数</td>
+<td>p1=3 / p5=6 / p25=21 / p50=55 / p75=108 / p90=179 / p95=235 / p99=354</td>
+<td>999 封顶行数</td>
+<td>1 行 (0.0003%)</td>
+</tr>
+<tr>
+<td>&gt;600 行数</td>
+<td>197 行 (0.055%)</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>解读</strong>: mean(78.0) &gt;&gt; median(55),skew=2.01,强右偏长尾;max=999 为传感器封顶(全数据仅 1 行恰在 999,&gt;600 共 197 行)。75% 分位才 108,但 99% 分位 354——RMSE 评分下这些尖峰事件权重极大,模型对高值事件的预测能力直接决定分数。</p>
+<h2>2. 站点差异</h2>
+<p><img alt="fig2" src="fig2_station_means.png" /></p>
+<table>
+<thead>
+<tr>
+<th>站点</th>
+<th>均值</th>
+<th>中位数</th>
+<th>std</th>
+<th>样本数</th>
+<th></th>
+<th>站点</th>
+<th>均值</th>
+<th>中位数</th>
+<th>std</th>
+<th>样本数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dongsi</td>
+<td>83.7</td>
+<td>60</td>
+<td>82.6</td>
+<td>30,079</td>
+<td></td>
+<td>Guanyuan</td>
+<td>80.9</td>
+<td>59</td>
+<td>77.6</td>
+<td>30,199</td>
+</tr>
+<tr>
+<td>Nongzhanguan</td>
+<td>82.7</td>
+<td>58</td>
+<td>82.9</td>
+<td>30,175</td>
+<td></td>
+<td>Tiantan</td>
+<td>80.1</td>
+<td>58</td>
+<td>77.5</td>
+<td>30,102</td>
+</tr>
+<tr>
+<td>Wanshouxigong</td>
+<td>82.4</td>
+<td>59</td>
+<td>81.6</td>
+<td>30,091</td>
+<td></td>
+<td>Shunyi</td>
+<td>77.9</td>
+<td>54</td>
+<td>78.4</td>
+<td>29,940</td>
+</tr>
+<tr>
+<td>Wanliu</td>
+<td>82.2</td>
+<td>59</td>
+<td>79.5</td>
+<td>30,393</td>
+<td></td>
+<td>Changping</td>
+<td>69.8</td>
+<td>46</td>
+<td>70.1</td>
+<td>29,992</td>
+</tr>
+<tr>
+<td>Gucheng</td>
+<td>81.6</td>
+<td>59</td>
+<td>78.5</td>
+<td>30,166</td>
+<td></td>
+<td>Huairou</td>
+<td>68.9</td>
+<td>47</td>
+<td>69.6</td>
+<td>29,830</td>
+</tr>
+<tr>
+<td>Aotizhongxin</td>
+<td>81.1</td>
+<td>58</td>
+<td>79.2</td>
+<td>29,846</td>
+<td></td>
+<td>Dingling</td>
+<td>65.2</td>
+<td>41</td>
+<td>71.4</td>
+<td>30,141</td>
+</tr>
+</tbody>
+</table>
+<p><strong>解读</strong>: 城区站最高 <strong>Dongsi</strong> 83.7,郊区背景站最低 <strong>Dingling</strong> 65.2,极差 ≈ 18.5 μg/m³(约 28%)。各站 std 均在 70–83,分布形状相似(右偏),主要差别在均值水平 → <strong>station 是有效的分类特征,但不足以单独解释方差</strong>。</p>
+<h2>3. 时间结构(季节性与年际)</h2>
+<p><img alt="fig3" src="fig3_monthly_heatmap.png" /></p>
+<p>月内均值(全期、12 站合并,按自然月):</p>
+<table>
+<thead>
+<tr>
+<th>月</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>均值</td>
+<td>87.1</td>
+<td>93.5</td>
+<td>94.7</td>
+<td>72.7</td>
+<td>63.0</td>
+<td>69.1</td>
+<td>71.8</td>
+<td>53.4</td>
+<td>63.9</td>
+<td>94.3</td>
+<td>92.0</td>
+<td>96.0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>季节规律: 采暖季(10–3月)高,暖季低;全期最低 <strong>8月 53.4</strong>,最高 <strong>12月 96.0</strong></li>
+<li>但年际波动巨大: 全数据最高月 2015-12月 = <strong>150.1</strong>;最低 2016-2月 = <strong>42.9</strong>(2016-02 反常干净;对比 2014-02 = 148.3)。</li>
+<li>热力图 NaN 区 = 该年月不在 train 内(2013-01/02、2016-09 之后),并非缺失。</li>
+</ul>
+<p><strong>解读</strong>: 仅靠 month-of-year 类日历特征做预测,会被年际差异(如 2015-12=150 vs 2016-02=43)击穿——见 §6 基线 B2。模型应主要依赖<strong>实时污染物/气象特征</strong>承载事件信号,日历特征只做季节先验。</p>
+<h2>4. 特征与目标的相关性(Pearson,逐对剔除缺失)</h2>
+<table>
+<thead>
+<tr>
+<th>特征</th>
+<th>r</th>
+<th></th>
+<th>特征</th>
+<th>r</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PM10</td>
+<td>+0.848</td>
+<td></td>
+<td>CO</td>
+<td>+0.762</td>
+</tr>
+<tr>
+<td>NO2</td>
+<td>+0.643</td>
+<td></td>
+<td>SO2</td>
+<td>+0.499</td>
+</tr>
+<tr>
+<td>WSPM</td>
+<td>-0.280</td>
+<td></td>
+<td>O3</td>
+<td>-0.133</td>
+</tr>
+<tr>
+<td>DEWP</td>
+<td>+0.124</td>
+<td></td>
+<td>TEMP</td>
+<td>-0.122</td>
+</tr>
+<tr>
+<td>RAIN</td>
+<td>-0.028</td>
+<td></td>
+<td>PRES</td>
+<td>+0.022</td>
+</tr>
+</tbody>
+</table>
+<p><strong>解读</strong>: 现时污染物是下一小时 PM2.5 的最强代理——<strong>PM10 r=+0.848、CO +0.762、NO2 +0.642</strong>(同源燃烧排放,且小时级自相关强);WSPM 负相关(风扩散),O3/TEMP 弱负相关(光化学活跃期往往清洁),DEWP 弱正。这解释了 §6 中线性回归不含任何 PM2.5 历史仍能拿到低 RMSE。</p>
+<h2>5. 缺失率(按列)</h2>
+<table>
+<thead>
+<tr>
+<th>列</th>
+<th>缺失率 %</th>
+<th></th>
+<th>列</th>
+<th>缺失率 %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CO</td>
+<td>4.386</td>
+<td></td>
+<td>O3</td>
+<td>2.355</td>
+</tr>
+<tr>
+<td>NO2</td>
+<td>2.084</td>
+<td></td>
+<td>SO2</td>
+<td>1.292</td>
+</tr>
+<tr>
+<td>PM10</td>
+<td>0.532</td>
+<td></td>
+<td>wd</td>
+<td>0.220</td>
+</tr>
+<tr>
+<td>DEWP</td>
+<td>0.050</td>
+<td></td>
+<td>PRES</td>
+<td>0.049</td>
+</tr>
+<tr>
+<td>TEMP</td>
+<td>0.049</td>
+<td></td>
+<td>WSPM</td>
+<td>0.048</td>
+</tr>
+<tr>
+<td>RAIN</td>
+<td>0.048</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>其余列(id/时间/station/年月日/hour/目标)缺失率为 0。<strong>解读</strong>: 缺失集中在 4 个污染物列(CO 4.4% / O3 2.4% / NO2 2.1% / SO2 1.3%),PM10 0.5%,气象列几乎无缺失 → 插补策略对 CO/O3 的稳健性比气象更重要;目标列无缺失。</p>
+<h2>6. Box-Cox λ 测定</h2>
+<ul>
+<li>数据前提: 目标全 &gt;0(min=2),<strong>无需 log(y+c) 平移</strong>,可直接 Box-Cox: y(λ) = (y^λ − 1)/λ</li>
+<li><strong>全样本(360,954 点)</strong>: scipy.stats.boxcox_normmax <code>method='mle'</code>(最大化变换后正态似然)→ <strong>λ = 0.1668</strong>;<code>method='pearsonr'</code>(最大化变换值与正态分位数相关)→ <strong>λ = 0.1905</strong></li>
+<li><strong>逐站 λ(mle)</strong>: 范围 0.0974(Dingling) → 0.1995(Dongsi),12 站平均 0.1639:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>站点</th>
+<th>λ</th>
+<th>站点</th>
+<th>λ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aotizhongxin</td>
+<td>0.1573</td>
+<td></td>
+<td>Changping</td>
+</tr>
+<tr>
+<td>Dingling</td>
+<td>0.0974</td>
+<td></td>
+<td>Dongsi</td>
+</tr>
+<tr>
+<td>Guanyuan</td>
+<td>0.1652</td>
+<td></td>
+<td>Gucheng</td>
+</tr>
+<tr>
+<td>Huairou</td>
+<td>0.1493</td>
+<td></td>
+<td>Nongzhanguan</td>
+</tr>
+<tr>
+<td>Shunyi</td>
+<td>0.1655</td>
+<td></td>
+<td>Tiantan</td>
+</tr>
+<tr>
+<td>Wanliu</td>
+<td>0.1886</td>
+<td></td>
+<td>Wanshouxigong</td>
+</tr>
+</tbody>
+</table>
+<p><strong>与队友参考图(R fable Guerrero λ≈0.0895)的方法差异(如实说明)</strong>:
+- 队友图来自 R <code>fable</code>/<code>forecast</code> 的 Guerrero(1993)估计器:以<strong>方差稳定</strong>为目标,在季节窗口上最小化分段标准差(去季节化子序列)的变异系数,与 fable::box_cox 默认行为一致。
+- 本报告 scipy 的两个估计器目标不同: <code>mle</code> 假设变换后近似正态、最大化 profile 似然;<code>pearsonr</code> 最大化变换值与正态分位数(QQ)相关。三者在同一数量级(Guerrero 0.09 vs scipy mle 0.167 / pearsonr 0.191),结论一致:<strong>强烈压缩右偏,接近但不完全等于对数(λ=0)</strong>。
+- 工程建议: λ∈[0.09, 0.19] 区间内,log1p(λ=0) 与 Box-Cox(λ=0.17) 的预测差异在 RMSE 尺度上通常很小;比赛按原始尺度评分,反变换(Duan 或直接 exp 后加残差调整)环节的取舍比 λ 的精确值更重要。可做 <strong>raw vs log vs boxcox</strong> 三组实验维度(对应 train_rf.py 的 <code>--transform</code> 开关)。</p>
+<h2>7. 统计基线(严格时间切分)</h2>
+<p><strong>切分规则(禁随机 K 折,防时序泄漏)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>集合</th>
+<th>时间范围</th>
+<th>行数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练</td>
+<td>2013-03-01 → 2015-08-31</td>
+<td>257,927</td>
+</tr>
+<tr>
+<td>验证</td>
+<td>2015-09-01 → 2016-02-29 (供暖季,与 test 同季节)</td>
+<td>51,349</td>
+</tr>
+</tbody>
+</table>
+<p>验证集目标: mean=83.2, std=102.0 μg/m³。预测验证集均值时 RMSE 的理论下限 ≈ std ≈ 102.0,可用作基线合理性标尺。</p>
+<table>
+<thead>
+<tr>
+<th>基线</th>
+<th>预测方式(仅用训练时段拟合)</th>
+<th>验证 RMSE (μg/m³,原始尺度)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1 常数</td>
+<td>全训练时段目标均值 79.8</td>
+<td><strong>102.04</strong></td>
+</tr>
+<tr>
+<td>B2 站点×月份</td>
+<td>训练时段的 (station, month-of-year) 目标均值</td>
+<td><strong>107.77</strong></td>
+</tr>
+<tr>
+<td>B3 线性回归</td>
+<td>OLS: PM10,SO2,NO2,CO,O3,TEMP,PRES,DEWP,RAIN,WSPM + 站点 one-hot(12) + hour 整数;缺失用训练时段中位数插补;<strong>无任何滞后特征</strong></td>
+<td><strong>36.09</strong></td>
+</tr>
+</tbody>
+</table>
+<p>验证旁证: 全训练集目标均值 = 78.043979,与 sample_submission 占位常数 78.043979 一致(主办方常数基线)。</p>
+<p><strong>解读</strong>:
+1. B1 RMSE 102.04 ≈ 验证集 std 102.0,符合"预测均值≈std"的理论预期。
+2. <strong>B2 比 B1 还差</strong>(107.77 vs 102.04): 训练期(2013-03→2015-08)的 9–2 月历史均值(如 2014-02=148、2015-02=93)无法预见验证期反常干净的冬天(2015-12=150 是 12 月历史均值 2 倍,2016-02 却只有 43)→ 纯日历均值在年际漂移面前<strong>没有增益甚至有害</strong>,佐证 §3。
+3. <strong>B3 用现时污染物即达 RMSE 36.09</strong>(比常数基线降 64.6%): 无 PM2.5 历史、纯线性即可做到,说明污染物(PM10 r=0.85)是主导信号 → 后续模型(P1 RF 等)必须在特征里吃满污染物+交互,日历特征只是补充。</p>
+<h2>8. 关键发现(供模型决策)</h2>
+<ol>
+<li><strong>目标右偏 + 封顶</strong>: mean 78.0 &gt; median 55,skew 2.01,max=999 仅 1 行;RMSE 对高值事件敏感 → 值得做目标变换实验(raw / log1p / Box-Cox λ≈0.17),评分在原始尺度,反变换策略要单独验证。</li>
+<li><strong>λ 测定结论</strong>: 全样本 scipy mle λ=0.167、pearsonr λ=0.191,逐站 0.097–0.199,与 R fable Guerrero 0.0895 同向(方法目标不同,如实记录)→ 接近对数变换但偏轻压缩。</li>
+<li><strong>主导信号 = 现时污染物</strong>: PM10 r=0.848 / CO 0.762 / NO2 0.643;线性基线(无滞后)RMSE 36.1,比常数基线低约 64.6%。特征工程重心应放在污染物交互(如 PM10×CO、二次项、站点×污染物)上。</li>
+<li><strong>日历特征要防年际漂移</strong>: 验证期(供暖季)与训练期同月均值系统性偏移(2015-12、2016-02 均创极端)→ month 类特征可用但模型必须主要靠实时特征;时间切分验证(而非随机 K 折)是唯一可信评估方式,test 与 train 无缝衔接(2016-08-31 23:00 起),后期可在 2016-03→08 时段做二次 holdout 检查泛化。</li>
+<li><strong>缺失与站点</strong>: 缺失集中在 CO/O3/NO2/SO2(1–4.4%),训练期中位数插补足够起步,后续可试按站点插补或加缺失指示列;站点均值差约 18 μg/m³(83.7 vs 65.2),one-hot 起步,后续可试按站建模对比。</li>
+</ol>
+<h2>附录: 溯源与复现</h2>
+<ul>
+<li>所有数字来源: <code>scripts/eda_compute.py</code> 在 2026-09-05 对 <code>/home/gaogao/workspace/beijing_aq/train.csv</code> 全量实际运行,结果落盘 <code>reports/eda_numbers.json</code>;本报告由 <code>scripts/render_eda_report.py</code> 直接读取该 JSON 生成(无手工转写)。</li>
+<li>复现: <code>python3 scripts/eda_compute.py &amp;&amp; python3 scripts/render_eda_report.py</code></li>
+<li>图文件(存 <code>reports/</code>): <code>fig1_target_distribution.png</code>(目标分布,双面板 log/zoom)、<code>fig2_station_means.png</code>(12 站均值柱状)、<code>fig3_monthly_heatmap.png</code>(年×月均值热力图)。</li>
+<li>环境: pandas 2.3.3 / numpy 2.2.6 / scipy 1.15.3 / sklearn 1.8.0 — 详见 STATUS.md。</li>
+</ul></section>
+<section lang="en"><h1>Beijing Multi-Site Air Quality — Deep EDA + Box-Cox λ Estimation + Statistical Baselines</h1>
+<blockquote>
+<p>Data: <code>train.csv</code> (full 360,954 rows) · Generated: 2026-09-05 · Pipeline: <code>scripts/eda_compute.py</code> → <code>reports/eda_numbers.json</code> → <code>scripts/render_eda_report.py</code>
+Golden rule: every figure in this report was produced by actual Python runs (see the Appendix: Traceability &amp; Reproduction); none were transcribed by hand.</p>
+</blockquote>
+<h2>0. Data Overview</h2>
+<ul>
+<li>Rows <strong>360,954</strong> × 19 columns; time span 2013-03-01 00:00:00 → 2016-08-31 22:00:00 (2013-03-01 → 2016-08-31, 42 months in total)</li>
+<li>12 stations: Aotizhongxin, Changping, Dingling, Dongsi, Guanyuan, Gucheng, Huairou, Nongzhanguan, Shunyi, Tiantan, Wanliu, Wanshouxigong</li>
+<li>Target column <code>PM2_5_next_hour</code> missing = <strong>0 rows</strong>; the data contains <strong>no <code>current_PM2_5</code> column</strong> (using PM2.5 history as features is forbidden — leakage red line)</li>
+</ul>
+<h2>1. Target Variable Distribution</h2>
+<p><img alt="fig1" src="fig1_target_distribution.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Statistic</th>
+<th>Value</th>
+<th>Statistic</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>count</td>
+<td>360,954</td>
+<td>skew</td>
+<td>2.01</td>
+</tr>
+<tr>
+<td>mean</td>
+<td>78.0</td>
+<td>median</td>
+<td>55</td>
+</tr>
+<tr>
+<td>std</td>
+<td>77.8</td>
+<td>min / max</td>
+<td>2 / 999 (capped)</td>
+</tr>
+<tr>
+<td>Quantiles</td>
+<td>p1=3 / p5=6 / p25=21 / p50=55 / p75=108 / p90=179 / p95=235 / p99=354</td>
+<td>Rows at 999 cap</td>
+<td>1 row (0.0003%)</td>
+</tr>
+<tr>
+<td>Rows &gt;600</td>
+<td>197 rows (0.055%)</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation</strong>: mean (78.0) &gt;&gt; median (55), skew = 2.01 — strongly right-skewed with a long tail; max = 999 is the sensor ceiling (only 1 row in the entire dataset sits exactly at 999; 197 rows exceed 600). The 75th percentile is only 108, yet the 99th percentile is 354 — under an RMSE-based scoring metric these spike events carry enormous weight, and a model's ability to predict high-value events directly determines the score.</p>
+<h2>2. Station Differences</h2>
+<p><img alt="fig2" src="fig2_station_means.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Station</th>
+<th>Mean</th>
+<th>Median</th>
+<th>std</th>
+<th>Count</th>
+<th></th>
+<th>Station</th>
+<th>Mean</th>
+<th>Median</th>
+<th>std</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dongsi</td>
+<td>83.7</td>
+<td>60</td>
+<td>82.6</td>
+<td>30,079</td>
+<td></td>
+<td>Guanyuan</td>
+<td>80.9</td>
+<td>59</td>
+<td>77.6</td>
+<td>30,199</td>
+</tr>
+<tr>
+<td>Nongzhanguan</td>
+<td>82.7</td>
+<td>58</td>
+<td>82.9</td>
+<td>30,175</td>
+<td></td>
+<td>Tiantan</td>
+<td>80.1</td>
+<td>58</td>
+<td>77.5</td>
+<td>30,102</td>
+</tr>
+<tr>
+<td>Wanshouxigong</td>
+<td>82.4</td>
+<td>59</td>
+<td>81.6</td>
+<td>30,091</td>
+<td></td>
+<td>Shunyi</td>
+<td>77.9</td>
+<td>54</td>
+<td>78.4</td>
+<td>29,940</td>
+</tr>
+<tr>
+<td>Wanliu</td>
+<td>82.2</td>
+<td>59</td>
+<td>79.5</td>
+<td>30,393</td>
+<td></td>
+<td>Changping</td>
+<td>69.8</td>
+<td>46</td>
+<td>70.1</td>
+<td>29,992</td>
+</tr>
+<tr>
+<td>Gucheng</td>
+<td>81.6</td>
+<td>59</td>
+<td>78.5</td>
+<td>30,166</td>
+<td></td>
+<td>Huairou</td>
+<td>68.9</td>
+<td>47</td>
+<td>69.6</td>
+<td>29,830</td>
+</tr>
+<tr>
+<td>Aotizhongxin</td>
+<td>81.1</td>
+<td>58</td>
+<td>79.2</td>
+<td>29,846</td>
+<td></td>
+<td>Dingling</td>
+<td>65.2</td>
+<td>41</td>
+<td>71.4</td>
+<td>30,141</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation</strong>: highest among urban stations is <strong>Dongsi</strong> at 83.7; lowest among suburban background stations is <strong>Dingling</strong> at 65.2 — a spread of ≈ 18.5 μg/m³ (≈ 28%). All stations have std in the 70–83 range with similar (right-skewed) distribution shapes; the main difference lies in mean level → <strong>station is a valid categorical feature, but insufficient on its own to explain the variance</strong>.</p>
+<h2>3. Temporal Structure (Seasonality and Inter-annual Variation)</h2>
+<p><img alt="fig3" src="fig3_monthly_heatmap.png" /></p>
+<p>Monthly means (full period, 12 stations pooled, by calendar month):</p>
+<table>
+<thead>
+<tr>
+<th>Month</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mean</td>
+<td>87.1</td>
+<td>93.5</td>
+<td>94.7</td>
+<td>72.7</td>
+<td>63.0</td>
+<td>69.1</td>
+<td>71.8</td>
+<td>53.4</td>
+<td>63.9</td>
+<td>94.3</td>
+<td>92.0</td>
+<td>96.0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Seasonal pattern: high in the heating season (months 10–3), low in the warm season; full-period minimum <strong>month 8 = 53.4</strong>, maximum <strong>month 12 = 96.0</strong></li>
+<li>But inter-annual fluctuation is huge: the highest month in the whole dataset is 2015-12 = <strong>150.1</strong>, while the lowest is 2016-2 = <strong>42.9</strong>; 2016-02 is anomalously clean (contrast 2014-02 = 148.3).</li>
+<li>NaN regions in the heatmap = that year-month is not in train (2013-01/02, after 2016-09), not missing data.</li>
+</ul>
+<p><strong>Interpretation</strong>: calendar features of the month-of-year type alone will be broken by inter-annual differences (e.g., 2015-12 = 150 vs 2016-02 = 43) — see baseline B2 in §6. The model should rely primarily on <strong>real-time pollutant/meteorological features</strong> to carry event signals; calendar features serve only as a seasonal prior.</p>
+<h2>4. Feature–Target Correlations (Pearson, pairwise missing deletion)</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>r</th>
+<th></th>
+<th>Feature</th>
+<th>r</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PM10</td>
+<td>+0.848</td>
+<td></td>
+<td>CO</td>
+<td>+0.762</td>
+</tr>
+<tr>
+<td>NO2</td>
+<td>+0.643</td>
+<td></td>
+<td>SO2</td>
+<td>+0.499</td>
+</tr>
+<tr>
+<td>WSPM</td>
+<td>-0.280</td>
+<td></td>
+<td>O3</td>
+<td>-0.133</td>
+</tr>
+<tr>
+<td>DEWP</td>
+<td>+0.124</td>
+<td></td>
+<td>TEMP</td>
+<td>-0.122</td>
+</tr>
+<tr>
+<td>RAIN</td>
+<td>-0.028</td>
+<td></td>
+<td>PRES</td>
+<td>+0.022</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation</strong>: current pollutants are the strongest proxies for next-hour PM2.5 — <strong>PM10 r = +0.848, CO +0.762, NO2 +0.642</strong> (same-source combustion emissions, plus strong hour-level autocorrelation); WSPM is negatively correlated (wind dispersion), O3/TEMP weakly negative (photochemically active periods tend to be clean), DEWP weakly positive. This explains why the linear regression in §6 achieves a low RMSE without any PM2.5 history.</p>
+<h2>5. Missing Rates (by column)</h2>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Missing %</th>
+<th></th>
+<th>Column</th>
+<th>Missing %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CO</td>
+<td>4.386</td>
+<td></td>
+<td>O3</td>
+<td>2.355</td>
+</tr>
+<tr>
+<td>NO2</td>
+<td>2.084</td>
+<td></td>
+<td>SO2</td>
+<td>1.292</td>
+</tr>
+<tr>
+<td>PM10</td>
+<td>0.532</td>
+<td></td>
+<td>wd</td>
+<td>0.220</td>
+</tr>
+<tr>
+<td>DEWP</td>
+<td>0.050</td>
+<td></td>
+<td>PRES</td>
+<td>0.049</td>
+</tr>
+<tr>
+<td>TEMP</td>
+<td>0.049</td>
+<td></td>
+<td>WSPM</td>
+<td>0.048</td>
+</tr>
+<tr>
+<td>RAIN</td>
+<td>0.048</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The remaining columns (id/time/station/year-month-day/hour/target) have a missing rate of 0. <strong>Interpretation</strong>: missingness is concentrated in the 4 pollutant columns (CO 4.4% / O3 2.4% / NO2 2.1% / SO2 1.3%), PM10 0.5%, while the meteorological columns are almost complete → imputation robustness matters more for CO/O3 than for meteorology; the target has no missing values.</p>
+<h2>6. Box-Cox λ Estimation</h2>
+<ul>
+<li>Data premise: the target is entirely &gt; 0 (min = 2), so <strong>no log(y+c) shift is needed</strong>; Box-Cox can be applied directly: y(λ) = (y^λ − 1)/λ</li>
+<li><strong>Full sample (360,954 points)</strong>: scipy.stats.boxcox_normmax with <code>method='mle'</code> (maximizes the transformed normality likelihood) → <strong>λ = 0.1668</strong>; <code>method='pearsonr'</code> (maximizes the correlation between transformed values and normal quantiles) → <strong>λ = 0.1905</strong></li>
+<li><strong>Per-station λ (mle)</strong>: range 0.0974 (Dingling) → 0.1995 (Dongsi), mean over the 12 stations 0.1639:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Station</th>
+<th>λ</th>
+<th>Station</th>
+<th>λ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aotizhongxin</td>
+<td>0.1573</td>
+<td></td>
+<td>Changping</td>
+</tr>
+<tr>
+<td>Dingling</td>
+<td>0.0974</td>
+<td></td>
+<td>Dongsi</td>
+</tr>
+<tr>
+<td>Guanyuan</td>
+<td>0.1652</td>
+<td></td>
+<td>Gucheng</td>
+</tr>
+<tr>
+<td>Huairou</td>
+<td>0.1493</td>
+<td></td>
+<td>Nongzhanguan</td>
+</tr>
+<tr>
+<td>Shunyi</td>
+<td>0.1655</td>
+<td></td>
+<td>Tiantan</td>
+</tr>
+<tr>
+<td>Wanliu</td>
+<td>0.1886</td>
+<td></td>
+<td>Wanshouxigong</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Methodological differences vs. teammate's reference figure (R fable Guerrero λ≈0.0895), reported honestly</strong>:
+- The teammate's figure comes from R <code>fable</code>/<code>forecast</code>'s Guerrero (1993) estimator: it targets <strong>variance stabilization</strong>, minimizing over seasonal windows the coefficient of variation of piecewise standard deviations (of deseasonalized subsequences), consistent with fable::box_cox default behavior.
+- The two scipy estimators in this report have different objectives: <code>mle</code> assumes the transformed data is approximately normal and maximizes the profile likelihood; <code>pearsonr</code> maximizes the correlation between transformed values and normal (QQ) quantiles. The three are of the same order of magnitude (Guerrero 0.09 vs scipy mle 0.167 / pearsonr 0.191) and agree on the conclusion: <strong>strong compression of the right skew, close to but not exactly the log transform (λ = 0)</strong>.
+- Engineering recommendation: within the λ∈[0.09, 0.19] interval, the difference between log1p (λ=0) and Box-Cox (λ=0.17) predictions is usually small on the RMSE scale; since the competition scores on the original scale, the choice of inverse transform (Duan smearing, or exp followed by residual adjustment) matters more than the exact value of λ. Run <strong>raw vs log vs boxcox</strong> as three experimental dimensions (corresponding to the <code>--transform</code> switch in train_rf.py).</p>
+<h2>7. Statistical Baselines (strict temporal split)</h2>
+<p><strong>Split rule (no random K-fold — prevents temporal leakage)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Set</th>
+<th>Time range</th>
+<th>Rows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Train</td>
+<td>2013-03-01 → 2015-08-31</td>
+<td>257,927</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>2015-09-01 → 2016-02-29 (heating season, same season as test)</td>
+<td>51,349</td>
+</tr>
+</tbody>
+</table>
+<p>Validation set target: mean = 83.2, std = 102.0 μg/m³. When predicting the validation mean, the theoretical RMSE floor ≈ std ≈ 102.0, which serves as a yardstick for baseline sanity.</p>
+<table>
+<thead>
+<tr>
+<th>Baseline</th>
+<th>Prediction method (fit on train period only)</th>
+<th>Validation RMSE (μg/m³, original scale)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1 constant</td>
+<td>Mean of target over full train period 79.8</td>
+<td><strong>102.04</strong></td>
+</tr>
+<tr>
+<td>B2 station × month</td>
+<td>(station, month-of-year) target means over train period</td>
+<td><strong>107.77</strong></td>
+</tr>
+<tr>
+<td>B3 linear regression</td>
+<td>OLS: PM10,SO2,NO2,CO,O3,TEMP,PRES,DEWP,RAIN,WSPM + station one-hot (12) + hour as integer; missing values imputed with train-period medians; <strong>no lag features whatsoever</strong></td>
+<td><strong>36.09</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Validation-side cross-check: full-train target mean = 78.043979, identical to the placeholder constant 78.043979 in sample_submission (the organizer's constant baseline).</p>
+<p><strong>Interpretation</strong>:
+1. B1 RMSE 102.04 ≈ validation std 102.0, consistent with the theoretical expectation that "predicting the mean ≈ std".
+2. <strong>B2 is worse than B1</strong> (107.77 vs 102.04): the historical means for months 9–2 (Sep–Feb) of the training period (2013-03 → 2015-08), e.g., 2014-02 = 148 and 2015-02 = 93, cannot anticipate the anomalously clean winter of the validation period (2015-12 = 150 — 2× the month-12 historical mean — while 2016-02 is only 43) → pure calendar means provide <strong>no gain and even harm</strong> under inter-annual drift, corroborating §3.
+3. <strong>B3 reaches RMSE 36.09 with current pollutants alone</strong> (64.6% lower than the constant baseline): achievable with a purely linear model and no PM2.5 history, showing pollutants (PM10 r = 0.85) are the dominant signal → downstream models (P1 RF, etc.) must saturate the features with pollutants + interactions; calendar features are only supplementary.</p>
+<h2>8. Key Findings (for modeling decisions)</h2>
+<ol>
+<li><strong>Right-skewed + capped target</strong>: mean 78.0 &gt; median 55, skew 2.01, max = 999 with only 1 row; RMSE is sensitive to high-value events → target transform experiments are worthwhile (raw / log1p / Box-Cox λ≈0.17); scoring is on the original scale, so the inverse-transform strategy must be validated separately.</li>
+<li><strong>λ estimation conclusion</strong>: full-sample scipy mle λ = 0.167, pearsonr λ = 0.191, per-station 0.097–0.199, consistent in direction with the R fable Guerrero 0.0895 (different method objectives, recorded honestly) → close to log transform but with lighter compression.</li>
+<li><strong>Dominant signal = current pollutants</strong>: PM10 r = 0.848 / CO 0.762 / NO2 0.643; linear baseline (no lags) RMSE 36.1, ≈64.6% lower than the constant baseline. Feature engineering should focus on pollutant interactions (e.g., PM10×CO, quadratic terms, station × pollutant).</li>
+<li><strong>Calendar features must guard against inter-annual drift</strong>: same-month means in the validation period (heating season) are systematically shifted from the training period (both 2015-12 and 2016-02 set extremes) → month-type features are usable, but the model must rely mainly on real-time features; time-aware split validation (not random K-fold) is the only credible evaluation scheme. Test and train are seamless (starting 2016-08-31 23:00), so a secondary holdout over 2016-03 → 08 can be run later to check generalization.</li>
+<li><strong>Missingness &amp; stations</strong>: missingness concentrates in CO/O3/NO2/SO2 (1–4.4%); train-period median imputation suffices to start, with per-station imputation or missing-indicator columns as later options; station means differ by ≈ 18 μg/m³ (83.7 vs 65.2) — one-hot to start, per-station modeling as a later comparison.</li>
+</ol>
+<h2>Appendix: Traceability &amp; Reproduction</h2>
+<ul>
+<li>Source of all figures: <code>scripts/eda_compute.py</code> actually run on 2026-09-05 against the full <code>/home/gaogao/workspace/beijing_aq/train.csv</code>, with results written to <code>reports/eda_numbers.json</code>; this report was generated by <code>scripts/render_eda_report.py</code> reading that JSON directly (no manual transcription).</li>
+<li>Reproduction: <code>python3 scripts/eda_compute.py &amp;&amp; python3 scripts/render_eda_report.py</code></li>
+<li>Figure files (stored in <code>reports/</code>): <code>fig1_target_distribution.png</code> (target distribution, dual-panel log/zoom), <code>fig2_station_means.png</code> (bar chart of 12-station means), <code>fig3_monthly_heatmap.png</code> (year × month mean heatmap).</li>
+<li>Environment: pandas 2.3.3 / numpy 2.2.6 / scipy 1.15.3 / sklearn 1.8.0 — see STATUS.md for details.</li>
+</ul></section>
+<script>
+function setLang(l){
+  document.documentElement.lang=l;
+  document.querySelectorAll('section').forEach(function(s){s.style.display=(s.getAttribute('lang')===l)?'block':'none';});
+  document.getElementById('btnZh').classList.toggle('active',l==='zh');
+  document.getElementById('btnEn').classList.toggle('active',l==='en');
+  try{localStorage.setItem('aq_lang',l);}catch(e){}
+}
+setLang((localStorage.getItem('aq_lang')==='en')?'en':'zh');
+</script>
+</body></html>

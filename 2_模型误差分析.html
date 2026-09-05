@@ -1,0 +1,2448 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">
+<title>2_模型误差分析 · 中文 / English</title><style>
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;max-width:960px;margin:0 auto;padding:70px 20px 40px;color:#222;line-height:1.7;background:#fafbfc}
+.langbar{position:fixed;top:0;left:0;right:0;background:#1F4E79;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:99;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.langbar .t{font-weight:bold;margin-right:auto}
+.langbar button{background:#fff;color:#1F4E79;border:none;border-radius:4px;padding:6px 16px;cursor:pointer;font-size:14px;font-weight:bold}
+.langbar button.active{background:#f0a500;color:#fff}
+section[lang="en"]{display:none}
+h1{border-bottom:3px solid #1F4E79;padding-bottom:8px;color:#1F4E79}
+h2{border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:36px;color:#1F4E79}
+h3{color:#333;margin-top:24px}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid #d0d0d0;padding:6px 10px;text-align:left;font-size:14px}
+th{background:#1F4E79;color:#fff}
+tr:nth-child(even){background:#f4f7fa}
+img{max-width:100%;border:1px solid #ddd;margin:8px 0}
+code{background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:13px}
+blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;background:#f4f7fa;color:#444}
+</style></head><body>
+<div class="langbar"><span class="t">🌐 2_模型误差分析</span>
+<button id="btnZh" class="active" onclick="setLang('zh')">中文</button>
+<button id="btnEn" onclick="setLang('en')">English</button></div>
+<section lang="zh"><h1>误差分析报告 — 北京多站点 PM2.5 下一小时预测(验证集)</h1>
+<blockquote>
+<p>本报告由 <code>scripts/render_error_analysis.py</code> 从 <code>reports/error_analysis_numbers.json</code> 程序化渲染,
+全部数值直接取自该 JSON,未做任何重算或补充(数值按统一规则四舍五入显示)。
+数据范围: 验证集 12 个站点、逐小时, 覆盖 2015-09 → 2016-02(供暖季), 共 51349 行; 目标: 预测下一小时 PM2.5, 误差按 真实值−预测值 或 预测值−真实值 口径见各表说明。</p>
+</blockquote>
+<hr />
+<h2>一、总体误差(全验证集)</h2>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>样本数 n</td>
+<td>51349</td>
+<td>预测均值 (μg/m³)</td>
+<td>76.06</td>
+</tr>
+<tr>
+<td>RMSE (μg/m³)</td>
+<td><strong>32.80</strong></td>
+<td>预测最大值</td>
+<td>525.93</td>
+</tr>
+<tr>
+<td>MAE (μg/m³)</td>
+<td><strong>16.38</strong></td>
+<td>预测 &gt;600 行数</td>
+<td>0</td>
+</tr>
+<tr>
+<td>RMSE / MAE</td>
+<td>2.00</td>
+<td>真实均值 (μg/m³)</td>
+<td>83.15</td>
+</tr>
+<tr>
+<td>Pearson 相关</td>
+<td>0.96</td>
+<td>真实中位数</td>
+<td>42</td>
+</tr>
+<tr>
+<td>OLS 斜率</td>
+<td>0.79</td>
+<td>真实标准差</td>
+<td>101.98</td>
+</tr>
+<tr>
+<td>OLS 截距</td>
+<td>10.52</td>
+<td>真实最大值</td>
+<td>999</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>真实 &gt;600 行数</td>
+<td>163</td>
+</tr>
+</tbody>
+</table>
+<p>预测均值低于真实均值,OLS 斜率小于 1、截距大于 0:高值段系统性低估、低值段被拉高,详见第二节分箱表。</p>
+<h3>残差(真实值 − 预测值)分布</h3>
+<table>
+<thead>
+<tr>
+<th>统计量</th>
+<th>数值</th>
+<th>分位数</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>均值</td>
+<td>7.09</td>
+<td>P1</td>
+<td>-49.97</td>
+</tr>
+<tr>
+<td>标准差</td>
+<td>32.03</td>
+<td>P5</td>
+<td>-22.05</td>
+</tr>
+<tr>
+<td>偏度</td>
+<td>4.93</td>
+<td>P25</td>
+<td>-4.86</td>
+</tr>
+<tr>
+<td>峰度</td>
+<td>70.92</td>
+<td>P50</td>
+<td>1.13</td>
+</tr>
+<tr>
+<td>负残差占比</td>
+<td>45.35%</td>
+<td>P75</td>
+<td>12.34</td>
+</tr>
+<tr>
+<td></td>
+<td>残差</td>
+<td>&gt;100 占比</td>
+<td>1.91%</td>
+</tr>
+<tr>
+<td></td>
+<td>残差</td>
+<td>&gt;200 占比</td>
+<td>0.33%</td>
+</tr>
+</tbody>
+</table>
+<p>残差均值接近零但右偏(偏度 4.93)、峰度极高(70.92),说明绝大多数误差很小,尾部由少数极端低估行贡献(见第五节 SSE 集中度)。</p>
+<p><img alt="残差分布 + 预测 vs 真实散点" src="fig_e2_residuals.png" /></p>
+<p><em>图 1: 残差分布与预测-真实散点(fig_e2_residuals.png)</em></p>
+<hr />
+<h2>二、按真实浓度分箱的误差分布</h2>
+<p>按真实 PM2.5 值分 9 箱。偏差 = 预测均值 − 真实均值(正 = 平均高估,负 = 平均低估);偏差率 = 偏差 / 真实均值;SSE 占比 = 该箱平方误差和占全验证集比例。</p>
+<table>
+<thead>
+<tr>
+<th>真实值区间</th>
+<th>样本数</th>
+<th>行占比</th>
+<th>真实均值</th>
+<th>预测均值</th>
+<th>偏差</th>
+<th>偏差率</th>
+<th>RMSE</th>
+<th>MAE</th>
+<th>SSE 占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0-20</td>
+<td>16850</td>
+<td>32.81%</td>
+<td>10.52</td>
+<td>13.76</td>
+<td>3.24</td>
+<td>30.80%</td>
+<td>9.92</td>
+<td>5.02</td>
+<td>3.00%</td>
+</tr>
+<tr>
+<td>20-40</td>
+<td>8042</td>
+<td>15.66%</td>
+<td>28.21</td>
+<td>30.68</td>
+<td>2.48</td>
+<td>8.78%</td>
+<td>14.35</td>
+<td>8.99</td>
+<td>3.00%</td>
+</tr>
+<tr>
+<td>40-60</td>
+<td>5117</td>
+<td>9.97%</td>
+<td>48.86</td>
+<td>50.39</td>
+<td>1.53</td>
+<td>3.12%</td>
+<td>16.65</td>
+<td>11.87</td>
+<td>2.57%</td>
+</tr>
+<tr>
+<td>60-80</td>
+<td>3824</td>
+<td>7.45%</td>
+<td>68.95</td>
+<td>67.75</td>
+<td>-1.20</td>
+<td>-1.73%</td>
+<td>18.53</td>
+<td>13.34</td>
+<td>2.38%</td>
+</tr>
+<tr>
+<td>80-100</td>
+<td>2878</td>
+<td>5.60%</td>
+<td>89.13</td>
+<td>83.87</td>
+<td>-5.26</td>
+<td>-5.90%</td>
+<td>21.66</td>
+<td>15.38</td>
+<td>2.44%</td>
+</tr>
+<tr>
+<td>100-150</td>
+<td>5206</td>
+<td>10.14%</td>
+<td>122.97</td>
+<td>113.83</td>
+<td>-9.14</td>
+<td>-7.43%</td>
+<td>25.82</td>
+<td>19.18</td>
+<td>6.28%</td>
+</tr>
+<tr>
+<td>150-200</td>
+<td>3163</td>
+<td>6.16%</td>
+<td>172.12</td>
+<td>154.33</td>
+<td>-17.79</td>
+<td>-10.34%</td>
+<td>31.93</td>
+<td>25.10</td>
+<td>5.84%</td>
+</tr>
+<tr>
+<td>200-300</td>
+<td>3971</td>
+<td>7.73%</td>
+<td>242.80</td>
+<td>212.53</td>
+<td>-30.27</td>
+<td>-12.47%</td>
+<td>44.79</td>
+<td>35.64</td>
+<td>14.42%</td>
+</tr>
+<tr>
+<td>&gt;300</td>
+<td>2298</td>
+<td>4.48%</td>
+<td>411.96</td>
+<td>323.77</td>
+<td>-88.19</td>
+<td>-21.41%</td>
+<td>120.18</td>
+<td>90.38</td>
+<td>60.08%</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="按真实值分箱: 压缩 / SSE 贡献" src="fig_e1_error_bins.png" /></p>
+<p><em>图 2: 按真实浓度分箱的误差构成(fig_e1_error_bins.png)</em></p>
+<p>SSE 高度集中: 行占比最高的区间是 0-20(32.81% 的行),只贡献 3.00% 的 SSE;而 SSE 占比最高的区间 &gt;300 仅占 4.48% 的行,却贡献 60.08% 的 SSE,其平均偏差达 -88.19(低估)。</p>
+<hr />
+<h2>三、分站点误差</h2>
+<p>站点名沿用 JSON 中的英文原名(北京 12 个国控站点)。偏差 = 预测均值 − 真实均值;RMSE/标准差 &lt; 1 表示站点内误差小于其自身波动幅度。</p>
+<table>
+<thead>
+<tr>
+<th>站点</th>
+<th>样本数</th>
+<th>真实均值</th>
+<th>预测均值</th>
+<th>偏差</th>
+<th>RMSE</th>
+<th>RMSE/真实标准差</th>
+<th>MAE</th>
+<th>Pearson</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wanshouxigong</td>
+<td>4264</td>
+<td>92.54</td>
+<td>83.48</td>
+<td>-9.06</td>
+<td>38.34</td>
+<td>0.34</td>
+<td>18.04</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Shunyi</td>
+<td>4305</td>
+<td>85.96</td>
+<td>73.78</td>
+<td>-12.19</td>
+<td>36.81</td>
+<td>0.35</td>
+<td>18.27</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Tiantan</td>
+<td>4318</td>
+<td>86.87</td>
+<td>77.48</td>
+<td>-9.39</td>
+<td>36.80</td>
+<td>0.35</td>
+<td>17.70</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Dongsi</td>
+<td>4329</td>
+<td>89.77</td>
+<td>82.30</td>
+<td>-7.47</td>
+<td>34.66</td>
+<td>0.31</td>
+<td>17.29</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Wanliu</td>
+<td>4313</td>
+<td>82.90</td>
+<td>75.94</td>
+<td>-6.97</td>
+<td>34.04</td>
+<td>0.34</td>
+<td>16.95</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Gucheng</td>
+<td>4267</td>
+<td>90.83</td>
+<td>85.49</td>
+<td>-5.35</td>
+<td>33.63</td>
+<td>0.31</td>
+<td>18.19</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Aotizhongxin</td>
+<td>4311</td>
+<td>87.13</td>
+<td>83.00</td>
+<td>-4.13</td>
+<td>32.65</td>
+<td>0.31</td>
+<td>16.10</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Nongzhanguan</td>
+<td>4215</td>
+<td>91.07</td>
+<td>81.06</td>
+<td>-10.01</td>
+<td>32.47</td>
+<td>0.30</td>
+<td>17.33</td>
+<td>0.97</td>
+</tr>
+<tr>
+<td>Guanyuan</td>
+<td>4334</td>
+<td>86.01</td>
+<td>79.06</td>
+<td>-6.94</td>
+<td>30.20</td>
+<td>0.29</td>
+<td>15.36</td>
+<td>0.97</td>
+</tr>
+<tr>
+<td>Dingling</td>
+<td>4274</td>
+<td>64.79</td>
+<td>59.96</td>
+<td>-4.83</td>
+<td>28.88</td>
+<td>0.35</td>
+<td>13.60</td>
+<td>0.95</td>
+</tr>
+<tr>
+<td>Huairou</td>
+<td>4269</td>
+<td>72.69</td>
+<td>65.25</td>
+<td>-7.44</td>
+<td>26.55</td>
+<td>0.31</td>
+<td>14.25</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Changping</td>
+<td>4150</td>
+<td>66.70</td>
+<td>65.53</td>
+<td>-1.16</td>
+<td>25.54</td>
+<td>0.33</td>
+<td>13.44</td>
+<td>0.94</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>四、按小时与月份</h2>
+<p><img alt="站点 / 小时 / 月三结构误差" src="fig_e3_error_structures.png" /></p>
+<p><em>图 3: 站点、小时、月份三个维度的误差结构(fig_e3_error_structures.png)</em></p>
+<h3>4.1 按小时(0–11 时)</h3>
+<table>
+<thead>
+<tr>
+<th>小时</th>
+<th>样本数</th>
+<th>真实均值</th>
+<th>预测均值</th>
+<th>偏差</th>
+<th>RMSE</th>
+<th>SSE 占比</th>
+<th>行占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>2153</td>
+<td>91.73</td>
+<td>84.41</td>
+<td>-7.32</td>
+<td>43.48</td>
+<td>7.37%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2152</td>
+<td>89.63</td>
+<td>81.68</td>
+<td>-7.95</td>
+<td>48.22</td>
+<td>9.06%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2133</td>
+<td>84.89</td>
+<td>78.04</td>
+<td>-6.85</td>
+<td>39.58</td>
+<td>6.05%</td>
+<td>4.15%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2130</td>
+<td>80.23</td>
+<td>74.42</td>
+<td>-5.81</td>
+<td>35.44</td>
+<td>4.84%</td>
+<td>4.15%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2145</td>
+<td>75.51</td>
+<td>69.97</td>
+<td>-5.53</td>
+<td>33.16</td>
+<td>4.27%</td>
+<td>4.18%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>2150</td>
+<td>72.88</td>
+<td>66.60</td>
+<td>-6.28</td>
+<td>29.51</td>
+<td>3.39%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>2139</td>
+<td>71.90</td>
+<td>65.80</td>
+<td>-6.10</td>
+<td>27.33</td>
+<td>2.89%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>7</td>
+<td>2152</td>
+<td>71.81</td>
+<td>66.45</td>
+<td>-5.35</td>
+<td>26.87</td>
+<td>2.81%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>8</td>
+<td>2149</td>
+<td>73.41</td>
+<td>68.75</td>
+<td>-4.67</td>
+<td>27.92</td>
+<td>3.03%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>9</td>
+<td>2137</td>
+<td>76.27</td>
+<td>70.19</td>
+<td>-6.08</td>
+<td>30.18</td>
+<td>3.52%</td>
+<td>4.16%</td>
+</tr>
+<tr>
+<td>10</td>
+<td>2120</td>
+<td>77.54</td>
+<td>71.03</td>
+<td>-6.51</td>
+<td>30.93</td>
+<td>3.67%</td>
+<td>4.13%</td>
+</tr>
+<tr>
+<td>11</td>
+<td>2102</td>
+<td>78.98</td>
+<td>70.53</td>
+<td>-8.45</td>
+<td>31.36</td>
+<td>3.74%</td>
+<td>4.09%</td>
+</tr>
+</tbody>
+</table>
+<h3>4.2 按小时(12–23 时)</h3>
+<table>
+<thead>
+<tr>
+<th>小时</th>
+<th>样本数</th>
+<th>真实均值</th>
+<th>预测均值</th>
+<th>偏差</th>
+<th>RMSE</th>
+<th>SSE 占比</th>
+<th>行占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td>2124</td>
+<td>79.08</td>
+<td>70.87</td>
+<td>-8.21</td>
+<td>32.04</td>
+<td>3.95%</td>
+<td>4.14%</td>
+</tr>
+<tr>
+<td>13</td>
+<td>2117</td>
+<td>78.54</td>
+<td>70.59</td>
+<td>-7.95</td>
+<td>30.97</td>
+<td>3.68%</td>
+<td>4.12%</td>
+</tr>
+<tr>
+<td>14</td>
+<td>2127</td>
+<td>78.01</td>
+<td>69.60</td>
+<td>-8.41</td>
+<td>31.17</td>
+<td>3.74%</td>
+<td>4.14%</td>
+</tr>
+<tr>
+<td>15</td>
+<td>2136</td>
+<td>78.04</td>
+<td>69.51</td>
+<td>-8.54</td>
+<td>30.82</td>
+<td>3.67%</td>
+<td>4.16%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>2141</td>
+<td>80.52</td>
+<td>71.71</td>
+<td>-8.81</td>
+<td>31.36</td>
+<td>3.81%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>17</td>
+<td>2142</td>
+<td>84.20</td>
+<td>75.39</td>
+<td>-8.81</td>
+<td>29.92</td>
+<td>3.47%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>18</td>
+<td>2137</td>
+<td>91.01</td>
+<td>81.84</td>
+<td>-9.17</td>
+<td>29.76</td>
+<td>3.43%</td>
+<td>4.16%</td>
+</tr>
+<tr>
+<td>19</td>
+<td>2153</td>
+<td>96.03</td>
+<td>86.94</td>
+<td>-9.09</td>
+<td>31.19</td>
+<td>3.79%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>20</td>
+<td>2156</td>
+<td>98.01</td>
+<td>91.05</td>
+<td>-6.95</td>
+<td>32.74</td>
+<td>4.18%</td>
+<td>4.20%</td>
+</tr>
+<tr>
+<td>21</td>
+<td>2142</td>
+<td>97.57</td>
+<td>91.93</td>
+<td>-5.64</td>
+<td>32.07</td>
+<td>3.99%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>22</td>
+<td>2158</td>
+<td>95.94</td>
+<td>89.82</td>
+<td>-6.12</td>
+<td>31.58</td>
+<td>3.90%</td>
+<td>4.20%</td>
+</tr>
+<tr>
+<td>23</td>
+<td>2154</td>
+<td>93.34</td>
+<td>87.68</td>
+<td>-5.66</td>
+<td>31.06</td>
+<td>3.76%</td>
+<td>4.19%</td>
+</tr>
+</tbody>
+</table>
+<h3>4.3 凌晨 0–3 时汇总</h3>
+<p>0–3 时合计 8568 行,占全部行的 16.69%,却贡献了 27.31% 的 SSE;该时段 RMSE 为 41.97(高于总体 32.80),真实均值 86.64。</p>
+<h3>4.4 按月</h3>
+<table>
+<thead>
+<tr>
+<th>月份</th>
+<th>样本数</th>
+<th>真实均值</th>
+<th>预测均值</th>
+<th>偏差</th>
+<th>RMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2015-09</td>
+<td>8436</td>
+<td>48.95</td>
+<td>47.22</td>
+<td>-1.73</td>
+<td>15.24</td>
+</tr>
+<tr>
+<td>2015-10</td>
+<td>8597</td>
+<td>71.86</td>
+<td>70.50</td>
+<td>-1.36</td>
+<td>20.12</td>
+</tr>
+<tr>
+<td>2015-11</td>
+<td>8425</td>
+<td>115.99</td>
+<td>103.58</td>
+<td>-12.41</td>
+<td>32.11</td>
+</tr>
+<tr>
+<td>2015-12</td>
+<td>8765</td>
+<td>150.15</td>
+<td>128.69</td>
+<td>-21.46</td>
+<td>50.54</td>
+</tr>
+<tr>
+<td>2016-01</td>
+<td>8856</td>
+<td>66.74</td>
+<td>64.29</td>
+<td>-2.45</td>
+<td>24.56</td>
+</tr>
+<tr>
+<td>2016-02</td>
+<td>8270</td>
+<td>42.90</td>
+<td>40.05</td>
+<td>-2.85</td>
+<td>40.24</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>五、平方误差集中度与高值端表现</h2>
+<h3>5.1 高浓度阈值段: 行占比 vs SSE 占比</h3>
+<p>验证集误差高度集中于高浓度段:真实值 ≥150 的行占 18.37%,却贡献了 80.33% 的平方误差;≥200 的行占 12.21% 贡献 74.49%;≥300 的行占 4.48% 贡献 60.08%。</p>
+<table>
+<thead>
+<tr>
+<th>真实值条件</th>
+<th>样本数</th>
+<th>行占比</th>
+<th>SSE 占比</th>
+<th>RMSE</th>
+<th>MAE</th>
+<th>真实均值</th>
+<th>预测均值</th>
+<th>偏差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>y_true ≥ 150</td>
+<td>9432</td>
+<td>18.37%</td>
+<td>80.33%</td>
+<td>68.60</td>
+<td>45.44</td>
+<td>260.31</td>
+<td>220.11</td>
+<td>-40.20</td>
+</tr>
+<tr>
+<td>y_true ≥ 200</td>
+<td>6269</td>
+<td>12.21%</td>
+<td>74.49%</td>
+<td>81.03</td>
+<td>55.71</td>
+<td>304.81</td>
+<td>253.30</td>
+<td>-51.50</td>
+</tr>
+<tr>
+<td>y_true ≥ 300</td>
+<td>2298</td>
+<td>4.48%</td>
+<td>60.08%</td>
+<td>120.18</td>
+<td>90.38</td>
+<td>411.96</td>
+<td>323.77</td>
+<td>-88.19</td>
+</tr>
+</tbody>
+</table>
+<p>各阈值段偏差均为负(低估),且阈值越高偏差绝对值越大:≥300 段平均低估 -88.19。</p>
+<h3>5.2 极端值(真实值 &gt;600)</h3>
+<p>真实值 &gt;600 的 163 行仅占全部行的 0.32%,却贡献了 24.26% 的 SSE;该段真实均值 660.97、预测均值仅 414.80,RMSE 高达 286.75。</p>
+<h3>5.3 绝对误差最大的 1% / 5% 行</h3>
+<p>绝对误差最大的前 1% 行(513 行,最小绝对误差 133.47)贡献了 47.52% 的 SSE,其真实均值达 484.78;前 5% 行(2567 行,最小绝对误差 59.79)贡献了 75.24% 的 SSE。</p>
+<h3>5.4 重污染检出与清洁日误报</h3>
+<p>检出能力: 真实值 ≥150 的 9432 行中,预测值 ≥150 的占 83.00%,预测值 &lt;100 的仅占 1.08%(平均预测值 220.11)。</p>
+<p>清洁日误报: 真实值 ≤50 的 27951 行中,预测值 &gt;100 的占 0.30%,预测值 &gt;150 的占 0.07%。</p>
+<h3>5.5 各误差场景下的输入环境剖面</h3>
+<p>比较全体 / 真实 ≥150 / 真实 ≥300 / |误差|&gt;75 / 真实 ≥150 且被低估 五类行 (under_pred_ge150 为真实值 ≥150 且预测低于真实的行)的平均污染物与气象输入。</p>
+<p>| 输入变量 | 全体 | 真实 ≥150 | 真实 ≥300 | |误差|&gt;75 | 真实≥150且被低估 |
+|---|---|---|---|---|---|
+| PM10 (μg/m³) | 96.28 | 267.08 | 418.42 | 377.26 | 160.06 |
+| SO2 (μg/m³) | 12.82 | 25.88 | 29.29 | 32.68 | 21.75 |
+| NO2 (μg/m³) | 52.12 | 99.51 | 130.32 | 117.62 | 76.89 |
+| CO (μg/m³) | 1501.98 | 3751.71 | 5630.98 | 5306.48 | 2374.42 |
+| O3 (μg/m³) | 34.45 | 20.29 | 19.16 | 12.49 | 20.69 |
+| 气温 (℃) | 5.56 | 4.44 | 2.56 | 0.34 | 4.88 |
+| 风速 (m/s) | 1.80 | 1.05 | 1.04 | 1.18 | 1.17 |
+| 露点 (℃) | -4.04 | 0.58 | -0.30 | -3.70 | -0.20 |
+| 气压 (hPa) | 1018.95 | 1017.58 | 1016.33 | 1017.34 | 1018.48 |
+| 降雨 (mm) | 0.04 | 0.0085 | 0.0012 | 0.04 | 0.0031 |
+| 样本数 n | 51349 | 9432 | 2298 | 1683 | 1603 |
+| 真实均值 | 83.15 | 260.31 | 411.96 | 376.40 | 174.88 |
+| 预测均值 | 76.06 | 220.11 | 323.77 | 273.89 | 129.29 |</p>
+<p>误差大(真实 ≥150 / ≥300 / |误差|&gt;75)的行对应显著更高的 PM10、SO2、NO2、CO 与更低的风速:高浓度静稳天气正是低估集中的场景。</p>
+<h3>5.6 训练 / 验证分布差异</h3>
+<table>
+<thead>
+<tr>
+<th>数据集</th>
+<th>样本数</th>
+<th>均值</th>
+<th>真实 &gt;150 占比</th>
+<th>真实 &gt;300 占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练集</td>
+<td>257927</td>
+<td>79.81</td>
+<td>14.96%</td>
+<td>1.80%</td>
+</tr>
+<tr>
+<td>验证集</td>
+<td>51349</td>
+<td>83.15</td>
+<td>18.20%</td>
+<td>4.45%</td>
+</tr>
+</tbody>
+</table>
+<p>验证集(供暖季)的重污染占比明显高于训练集(&gt;150: 14.96% vs 18.20%;&gt;300: 1.80% vs 4.45%),分布漂移放大了高值段误差。</p>
+<hr />
+<h2>六、重污染事件(日级峰值)检出</h2>
+<p>以下为验证期内真实均值最高的 8 个污染日(日级事件,按日期聚合)。</p>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>当日行数</th>
+<th>真实均值</th>
+<th>预测均值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2016-02-08</td>
+<td>84</td>
+<td>559.65</td>
+<td>252.24</td>
+</tr>
+<tr>
+<td>2015-12-25</td>
+<td>270</td>
+<td>487.40</td>
+<td>370.91</td>
+</tr>
+<tr>
+<td>2015-12-01</td>
+<td>276</td>
+<td>473.04</td>
+<td>365.04</td>
+</tr>
+<tr>
+<td>2015-11-30</td>
+<td>194</td>
+<td>429.95</td>
+<td>325.23</td>
+</tr>
+<tr>
+<td>2015-12-24</td>
+<td>67</td>
+<td>394.03</td>
+<td>239.44</td>
+</tr>
+<tr>
+<td>2015-12-26</td>
+<td>211</td>
+<td>340.25</td>
+<td>318.47</td>
+</tr>
+<tr>
+<td>2015-12-30</td>
+<td>47</td>
+<td>334.49</td>
+<td>283.35</td>
+</tr>
+<tr>
+<td>2015-12-22</td>
+<td>240</td>
+<td>324.05</td>
+<td>263.60</td>
+</tr>
+</tbody>
+</table>
+<p>最极端的污染日 2016-02-08 真实均值 559.65,而当日平均预测仅 252.24 —— 事件级别的大幅低估是整体误差的主要来源之一。</p>
+<h3>6.1 绝对误差最大的 10 行</h3>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>站点</th>
+<th>真实值</th>
+<th>预测值</th>
+<th>绝对误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2016-02-08 00:00:00</td>
+<td>Dingling</td>
+<td>881</td>
+<td>25.26</td>
+<td>855.74</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Changping</td>
+<td>882</td>
+<td>97.17</td>
+<td>784.83</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Wanshouxigong</td>
+<td>999</td>
+<td>228.32</td>
+<td>770.68</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Shunyi</td>
+<td>941</td>
+<td>250.58</td>
+<td>690.42</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Wanliu</td>
+<td>957</td>
+<td>299.22</td>
+<td>657.78</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Aotizhongxin</td>
+<td>898</td>
+<td>241.09</td>
+<td>656.91</td>
+</tr>
+<tr>
+<td>2016-02-08 00:00:00</td>
+<td>Wanshouxigong</td>
+<td>826</td>
+<td>192.20</td>
+<td>633.80</td>
+</tr>
+<tr>
+<td>2016-02-08 02:00:00</td>
+<td>Wanshouxigong</td>
+<td>857</td>
+<td>243.77</td>
+<td>613.23</td>
+</tr>
+<tr>
+<td>2016-02-08 00:00:00</td>
+<td>Shunyi</td>
+<td>816</td>
+<td>221.20</td>
+<td>594.80</td>
+</tr>
+<tr>
+<td>2016-02-08 02:00:00</td>
+<td>Tiantan</td>
+<td>821</td>
+<td>241.41</td>
+<td>579.59</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>七、校正场景模拟</h2>
+<h3>7.1 假设性场景: 若高值段误差被消除 / 减半,总体 RMSE 会降到多少</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>RMSE (μg/m³)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前模型(基准)</td>
+<td>32.80</td>
+</tr>
+<tr>
+<td>真实 ≥150 行误差减半</td>
+<td>20.68</td>
+</tr>
+<tr>
+<td>真实 ≥150 行误差清零</td>
+<td>14.55</td>
+</tr>
+<tr>
+<td>真实 ≥300 行误差减半</td>
+<td>24.31</td>
+</tr>
+<tr>
+<td>真实 ≥300 行误差清零</td>
+<td>20.73</td>
+</tr>
+</tbody>
+</table>
+<p>若真实 ≥150 的误差完全消除,总体 RMSE 可由 32.80 降至 14.55;仅处理 ≥300 段也可降至 20.73 —— 高值段是改进空间最大的方向。</p>
+<h3>7.2 分段乘法校准(样本外验证)</h3>
+<p>按预测值分箱在校准集上估计乘法因子,再应用到时间上不重叠的评估集:</p>
+<table>
+<thead>
+<tr>
+<th>预测值区间</th>
+<th>校准集样本数</th>
+<th>校准因子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0-20</td>
+<td>6561</td>
+<td>0.99</td>
+</tr>
+<tr>
+<td>20-40</td>
+<td>5009</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>40-60</td>
+<td>3184</td>
+<td>1.01</td>
+</tr>
+<tr>
+<td>60-80</td>
+<td>2715</td>
+<td>1.02</td>
+</tr>
+<tr>
+<td>80-100</td>
+<td>1906</td>
+<td>1.06</td>
+</tr>
+<tr>
+<td>100-150</td>
+<td>2417</td>
+<td>1.10</td>
+</tr>
+<tr>
+<td>150-200</td>
+<td>1356</td>
+<td>1.10</td>
+</tr>
+<tr>
+<td>200-300</td>
+<td>1944</td>
+<td>1.09</td>
+</tr>
+<tr>
+<td>&gt;300</td>
+<td>366</td>
+<td>1.18</td>
+</tr>
+</tbody>
+</table>
+<p>校准集: 25458 行(2015-09-01→2015-11-30);评估集: 25891 行(2015-12-01→2016-02-29,真实均值 87.36,原始预测均值 78.35)。校准集样本内 RMSE 为 20.56。</p>
+<table>
+<thead>
+<tr>
+<th>评估集指标</th>
+<th>原始模型</th>
+<th>分段校准后</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RMSE (μg/m³)</td>
+<td>39.86</td>
+<td>34.60</td>
+<td>-13.19%</td>
+</tr>
+<tr>
+<td>MAE (μg/m³)</td>
+<td>18.75</td>
+<td>16.30</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>在样本外评估集上,分段校准把 RMSE 从 39.86 降到 34.60(降幅 -13.19%),MAE 从 18.75 降到 16.30。</p>
+<h3>7.3 参照: Box-Cox 变换目标尺度</h3>
+<table>
+<thead>
+<tr>
+<th>参照模型</th>
+<th>样本数</th>
+<th>RMSE</th>
+<th>MAE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Box-Cox 变换(反变换回原始尺度)</td>
+<td>51349</td>
+<td>38.06</td>
+<td>18.03</td>
+</tr>
+</tbody>
+</table>
+<p>作为参照,以 Box-Cox 变换目标训练并在原始尺度评估的模型 RMSE 为 38.06(MAE 18.03),高于当前模型 32.80 / 16.38 的水平。</p>
+<hr />
+<h2>八、结论与改进建议</h2>
+<p><strong>1. 误差集中于高浓度段与极端污染事件,应优先专项治理。</strong> 真实值 ≥150 的行仅占 18.37% 却贡献 80.33% 的 SSE;&gt;600 的 163 行贡献 24.26% 的 SSE,当日真实均值最高的事件(2016-02-08)真实 559.65 vs 预测 252.24。建议: 针对重污染过程单独建模或加权(如对真实 ≥150 行做误差敏感的训练加权 / 上采样),并为极端事件构建阈值预警专用模型。</p>
+<p><strong>2. 夜间(0–3 时)误差偏高。</strong> 该时段行占 16.69% 却贡献 27.31% 的 SSE,RMSE 41.97 高于总体 32.80。建议: 增加夜间气象与逆温相关特征,或按小时分模型、给夜间段更大的误差权重。</p>
+<p><strong>3. 分段乘法校正在样本外有效,可继续沿用并扩展。</strong> 评估集 RMSE 由 39.86 降至 34.60(降幅 -13.19%),其中 &gt;300 段的校准因子达 1.18;高值段假设场景也显示消除 ≥150 误差可将总体 RMSE 从 32.80 降至 14.55。建议: 在模型预测后叠加分段校准,并针对校准因子最大的高值段继续降低原始模型偏差。</p>
+<hr />
+<p><em>注: 本报告数值均按 JSON 原值统一舍入显示(整数保持整数,其余保留两位小数,小于 0.01 的值保留四位小数);百分比字段在 JSON 中即已为百分数。</em></p></section>
+<section lang="en"><h1>Error Analysis Report — Next-Hour PM2.5 Prediction Across Beijing Stations (Validation Set)</h1>
+<blockquote>
+<p>This report is programmatically rendered by <code>scripts/render_error_analysis.py</code> from <code>reports/error_analysis_numbers.json</code>;
+all values are taken directly from that JSON without any recomputation or supplementation (values are displayed rounded according to a uniform rule).
+Data scope: validation set of 12 stations, hourly, covering 2015-09 → 2016-02 (heating season), 51349 rows in total; target: predict next-hour PM2.5. Error definitions follow 真值−预测值 (actual − predicted) or 预测值−真值 (predicted − actual) conventions as noted in each table.</p>
+</blockquote>
+<hr />
+<h2>1. Overall Error (Full Validation Set)</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample count n</td>
+<td>51349</td>
+<td>Predicted mean (μg/m³)</td>
+<td>76.06</td>
+</tr>
+<tr>
+<td>RMSE (μg/m³)</td>
+<td><strong>32.80</strong></td>
+<td>Predicted max</td>
+<td>525.93</td>
+</tr>
+<tr>
+<td>MAE (μg/m³)</td>
+<td><strong>16.38</strong></td>
+<td>Rows with prediction &gt;600</td>
+<td>0</td>
+</tr>
+<tr>
+<td>RMSE / MAE</td>
+<td>2.00</td>
+<td>Actual mean (μg/m³)</td>
+<td>83.15</td>
+</tr>
+<tr>
+<td>Pearson correlation</td>
+<td>0.96</td>
+<td>Actual median</td>
+<td>42</td>
+</tr>
+<tr>
+<td>OLS slope</td>
+<td>0.79</td>
+<td>Actual std. dev.</td>
+<td>101.98</td>
+</tr>
+<tr>
+<td>OLS intercept</td>
+<td>10.52</td>
+<td>Actual max</td>
+<td>999</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>Rows with actual &gt;600</td>
+<td>163</td>
+</tr>
+</tbody>
+</table>
+<p>The predicted mean is below the actual mean; the OLS slope is less than 1 and the intercept greater than 0: high-value segments are systematically underestimated while low values are pulled upward — see the bin tables in Section 2.</p>
+<h3>Residual (Actual − Predicted) Distribution</h3>
+<table>
+<thead>
+<tr>
+<th>Statistic</th>
+<th>Value</th>
+<th>Quantile</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mean</td>
+<td>7.09</td>
+<td>P1</td>
+<td>-49.97</td>
+</tr>
+<tr>
+<td>Std. dev.</td>
+<td>32.03</td>
+<td>P5</td>
+<td>-22.05</td>
+</tr>
+<tr>
+<td>Skewness</td>
+<td>4.93</td>
+<td>P25</td>
+<td>-4.86</td>
+</tr>
+<tr>
+<td>Kurtosis</td>
+<td>70.92</td>
+<td>P50</td>
+<td>1.13</td>
+</tr>
+<tr>
+<td>Share of negative residuals</td>
+<td>45.35%</td>
+<td>P75</td>
+<td>12.34</td>
+</tr>
+<tr>
+<td>Share of |residual|&gt;100</td>
+<td>1.91%</td>
+<td>P95</td>
+<td>54.06</td>
+</tr>
+<tr>
+<td>Share of |residual|&gt;200</td>
+<td>0.33%</td>
+<td>P99</td>
+<td>127.58</td>
+</tr>
+</tbody>
+</table>
+<p>The residual mean is near zero but right-skewed (skewness 4.93) with extremely high kurtosis (70.92), indicating that most errors are very small while the tails are driven by a few rows with extreme underestimation (see SSE concentration in Section 5).</p>
+<p><img alt="Residual distribution + predicted vs. actual scatter" src="fig_e2_residuals.png" /></p>
+<p><em>Figure 1: Residual distribution and predicted-actual scatter (fig_e2_residuals.png)</em></p>
+<hr />
+<h2>2. Error Distribution by Bins of Actual Concentration</h2>
+<p>Rows are split into 9 bins by actual PM2.5 value. Bias = predicted mean − actual mean (positive = average overestimation, negative = average underestimation); bias rate = bias / actual mean; SSE share = the bin's sum of squared errors as a share of the full validation set.</p>
+<table>
+<thead>
+<tr>
+<th>Actual range</th>
+<th>Sample count</th>
+<th>Row share</th>
+<th>Actual mean</th>
+<th>Predicted mean</th>
+<th>Bias</th>
+<th>Bias rate</th>
+<th>RMSE</th>
+<th>MAE</th>
+<th>SSE share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0-20</td>
+<td>16850</td>
+<td>32.81%</td>
+<td>10.52</td>
+<td>13.76</td>
+<td>3.24</td>
+<td>30.80%</td>
+<td>9.92</td>
+<td>5.02</td>
+<td>3.00%</td>
+</tr>
+<tr>
+<td>20-40</td>
+<td>8042</td>
+<td>15.66%</td>
+<td>28.21</td>
+<td>30.68</td>
+<td>2.48</td>
+<td>8.78%</td>
+<td>14.35</td>
+<td>8.99</td>
+<td>3.00%</td>
+</tr>
+<tr>
+<td>40-60</td>
+<td>5117</td>
+<td>9.97%</td>
+<td>48.86</td>
+<td>50.39</td>
+<td>1.53</td>
+<td>3.12%</td>
+<td>16.65</td>
+<td>11.87</td>
+<td>2.57%</td>
+</tr>
+<tr>
+<td>60-80</td>
+<td>3824</td>
+<td>7.45%</td>
+<td>68.95</td>
+<td>67.75</td>
+<td>-1.20</td>
+<td>-1.73%</td>
+<td>18.53</td>
+<td>13.34</td>
+<td>2.38%</td>
+</tr>
+<tr>
+<td>80-100</td>
+<td>2878</td>
+<td>5.60%</td>
+<td>89.13</td>
+<td>83.87</td>
+<td>-5.26</td>
+<td>-5.90%</td>
+<td>21.66</td>
+<td>15.38</td>
+<td>2.44%</td>
+</tr>
+<tr>
+<td>100-150</td>
+<td>5206</td>
+<td>10.14%</td>
+<td>122.97</td>
+<td>113.83</td>
+<td>-9.14</td>
+<td>-7.43%</td>
+<td>25.82</td>
+<td>19.18</td>
+<td>6.28%</td>
+</tr>
+<tr>
+<td>150-200</td>
+<td>3163</td>
+<td>6.16%</td>
+<td>172.12</td>
+<td>154.33</td>
+<td>-17.79</td>
+<td>-10.34%</td>
+<td>31.93</td>
+<td>25.10</td>
+<td>5.84%</td>
+</tr>
+<tr>
+<td>200-300</td>
+<td>3971</td>
+<td>7.73%</td>
+<td>242.80</td>
+<td>212.53</td>
+<td>-30.27</td>
+<td>-12.47%</td>
+<td>44.79</td>
+<td>35.64</td>
+<td>14.42%</td>
+</tr>
+<tr>
+<td>&gt;300</td>
+<td>2298</td>
+<td>4.48%</td>
+<td>411.96</td>
+<td>323.77</td>
+<td>-88.19</td>
+<td>-21.41%</td>
+<td>120.18</td>
+<td>90.38</td>
+<td>60.08%</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Binned by actual value: compression / SSE contribution" src="fig_e1_error_bins.png" /></p>
+<p><em>Figure 2: Error composition by bins of actual concentration (fig_e1_error_bins.png)</em></p>
+<p>SSE is highly concentrated: the 0-20 range holds the largest row share (32.81% of rows) yet contributes only 3.00% of the SSE, while the &gt;300 range — the largest SSE contributor — holds only 4.48% of rows yet contributes 60.08% of the SSE, with an average bias of -88.19 (underestimation).</p>
+<hr />
+<h2>3. Error by Station</h2>
+<p>Station names follow the original English names in the JSON (12 national control stations in Beijing). Bias = predicted mean − actual mean; RMSE/std. dev. &lt; 1 indicates that within-station error is smaller than the station's own variability.</p>
+<table>
+<thead>
+<tr>
+<th>Station</th>
+<th>Sample count</th>
+<th>Actual mean</th>
+<th>Predicted mean</th>
+<th>Bias</th>
+<th>RMSE</th>
+<th>RMSE/actual std. dev.</th>
+<th>MAE</th>
+<th>Pearson</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wanshouxigong</td>
+<td>4264</td>
+<td>92.54</td>
+<td>83.48</td>
+<td>-9.06</td>
+<td>38.34</td>
+<td>0.34</td>
+<td>18.04</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Shunyi</td>
+<td>4305</td>
+<td>85.96</td>
+<td>73.78</td>
+<td>-12.19</td>
+<td>36.81</td>
+<td>0.35</td>
+<td>18.27</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Tiantan</td>
+<td>4318</td>
+<td>86.87</td>
+<td>77.48</td>
+<td>-9.39</td>
+<td>36.80</td>
+<td>0.35</td>
+<td>17.70</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Dongsi</td>
+<td>4329</td>
+<td>89.77</td>
+<td>82.30</td>
+<td>-7.47</td>
+<td>34.66</td>
+<td>0.31</td>
+<td>17.29</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Wanliu</td>
+<td>4313</td>
+<td>82.90</td>
+<td>75.94</td>
+<td>-6.97</td>
+<td>34.04</td>
+<td>0.34</td>
+<td>16.95</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Gucheng</td>
+<td>4267</td>
+<td>90.83</td>
+<td>85.49</td>
+<td>-5.35</td>
+<td>33.63</td>
+<td>0.31</td>
+<td>18.19</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Aotizhongxin</td>
+<td>4311</td>
+<td>87.13</td>
+<td>83.00</td>
+<td>-4.13</td>
+<td>32.65</td>
+<td>0.31</td>
+<td>16.10</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Nongzhanguan</td>
+<td>4215</td>
+<td>91.07</td>
+<td>81.06</td>
+<td>-10.01</td>
+<td>32.47</td>
+<td>0.30</td>
+<td>17.33</td>
+<td>0.97</td>
+</tr>
+<tr>
+<td>Guanyuan</td>
+<td>4334</td>
+<td>86.01</td>
+<td>79.06</td>
+<td>-6.94</td>
+<td>30.20</td>
+<td>0.29</td>
+<td>15.36</td>
+<td>0.97</td>
+</tr>
+<tr>
+<td>Dingling</td>
+<td>4274</td>
+<td>64.79</td>
+<td>59.96</td>
+<td>-4.83</td>
+<td>28.88</td>
+<td>0.35</td>
+<td>13.60</td>
+<td>0.95</td>
+</tr>
+<tr>
+<td>Huairou</td>
+<td>4269</td>
+<td>72.69</td>
+<td>65.25</td>
+<td>-7.44</td>
+<td>26.55</td>
+<td>0.31</td>
+<td>14.25</td>
+<td>0.96</td>
+</tr>
+<tr>
+<td>Changping</td>
+<td>4150</td>
+<td>66.70</td>
+<td>65.53</td>
+<td>-1.16</td>
+<td>25.54</td>
+<td>0.33</td>
+<td>13.44</td>
+<td>0.94</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>4. By Hour and Month</h2>
+<p><img alt="Error structure across station / hour / month" src="fig_e3_error_structures.png" /></p>
+<p><em>Figure 3: Error structure across the station, hour, and month dimensions (fig_e3_error_structures.png)</em></p>
+<h3>4.1 By Hour (0–11)</h3>
+<table>
+<thead>
+<tr>
+<th>Hour</th>
+<th>Sample count</th>
+<th>Actual mean</th>
+<th>Predicted mean</th>
+<th>Bias</th>
+<th>RMSE</th>
+<th>SSE share</th>
+<th>Row share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>2153</td>
+<td>91.73</td>
+<td>84.41</td>
+<td>-7.32</td>
+<td>43.48</td>
+<td>7.37%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2152</td>
+<td>89.63</td>
+<td>81.68</td>
+<td>-7.95</td>
+<td>48.22</td>
+<td>9.06%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2133</td>
+<td>84.89</td>
+<td>78.04</td>
+<td>-6.85</td>
+<td>39.58</td>
+<td>6.05%</td>
+<td>4.15%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2130</td>
+<td>80.23</td>
+<td>74.42</td>
+<td>-5.81</td>
+<td>35.44</td>
+<td>4.84%</td>
+<td>4.15%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2145</td>
+<td>75.51</td>
+<td>69.97</td>
+<td>-5.53</td>
+<td>33.16</td>
+<td>4.27%</td>
+<td>4.18%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>2150</td>
+<td>72.88</td>
+<td>66.60</td>
+<td>-6.28</td>
+<td>29.51</td>
+<td>3.39%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>2139</td>
+<td>71.90</td>
+<td>65.80</td>
+<td>-6.10</td>
+<td>27.33</td>
+<td>2.89%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>7</td>
+<td>2152</td>
+<td>71.81</td>
+<td>66.45</td>
+<td>-5.35</td>
+<td>26.87</td>
+<td>2.81%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>8</td>
+<td>2149</td>
+<td>73.41</td>
+<td>68.75</td>
+<td>-4.67</td>
+<td>27.92</td>
+<td>3.03%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>9</td>
+<td>2137</td>
+<td>76.27</td>
+<td>70.19</td>
+<td>-6.08</td>
+<td>30.18</td>
+<td>3.52%</td>
+<td>4.16%</td>
+</tr>
+<tr>
+<td>10</td>
+<td>2120</td>
+<td>77.54</td>
+<td>71.03</td>
+<td>-6.51</td>
+<td>30.93</td>
+<td>3.67%</td>
+<td>4.13%</td>
+</tr>
+<tr>
+<td>11</td>
+<td>2102</td>
+<td>78.98</td>
+<td>70.53</td>
+<td>-8.45</td>
+<td>31.36</td>
+<td>3.74%</td>
+<td>4.09%</td>
+</tr>
+</tbody>
+</table>
+<h3>4.2 By Hour (12–23)</h3>
+<table>
+<thead>
+<tr>
+<th>Hour</th>
+<th>Sample count</th>
+<th>Actual mean</th>
+<th>Predicted mean</th>
+<th>Bias</th>
+<th>RMSE</th>
+<th>SSE share</th>
+<th>Row share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td>2124</td>
+<td>79.08</td>
+<td>70.87</td>
+<td>-8.21</td>
+<td>32.04</td>
+<td>3.95%</td>
+<td>4.14%</td>
+</tr>
+<tr>
+<td>13</td>
+<td>2117</td>
+<td>78.54</td>
+<td>70.59</td>
+<td>-7.95</td>
+<td>30.97</td>
+<td>3.68%</td>
+<td>4.12%</td>
+</tr>
+<tr>
+<td>14</td>
+<td>2127</td>
+<td>78.01</td>
+<td>69.60</td>
+<td>-8.41</td>
+<td>31.17</td>
+<td>3.74%</td>
+<td>4.14%</td>
+</tr>
+<tr>
+<td>15</td>
+<td>2136</td>
+<td>78.04</td>
+<td>69.51</td>
+<td>-8.54</td>
+<td>30.82</td>
+<td>3.67%</td>
+<td>4.16%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>2141</td>
+<td>80.52</td>
+<td>71.71</td>
+<td>-8.81</td>
+<td>31.36</td>
+<td>3.81%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>17</td>
+<td>2142</td>
+<td>84.20</td>
+<td>75.39</td>
+<td>-8.81</td>
+<td>29.92</td>
+<td>3.47%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>18</td>
+<td>2137</td>
+<td>91.01</td>
+<td>81.84</td>
+<td>-9.17</td>
+<td>29.76</td>
+<td>3.43%</td>
+<td>4.16%</td>
+</tr>
+<tr>
+<td>19</td>
+<td>2153</td>
+<td>96.03</td>
+<td>86.94</td>
+<td>-9.09</td>
+<td>31.19</td>
+<td>3.79%</td>
+<td>4.19%</td>
+</tr>
+<tr>
+<td>20</td>
+<td>2156</td>
+<td>98.01</td>
+<td>91.05</td>
+<td>-6.95</td>
+<td>32.74</td>
+<td>4.18%</td>
+<td>4.20%</td>
+</tr>
+<tr>
+<td>21</td>
+<td>2142</td>
+<td>97.57</td>
+<td>91.93</td>
+<td>-5.64</td>
+<td>32.07</td>
+<td>3.99%</td>
+<td>4.17%</td>
+</tr>
+<tr>
+<td>22</td>
+<td>2158</td>
+<td>95.94</td>
+<td>89.82</td>
+<td>-6.12</td>
+<td>31.58</td>
+<td>3.90%</td>
+<td>4.20%</td>
+</tr>
+<tr>
+<td>23</td>
+<td>2154</td>
+<td>93.34</td>
+<td>87.68</td>
+<td>-5.66</td>
+<td>31.06</td>
+<td>3.76%</td>
+<td>4.19%</td>
+</tr>
+</tbody>
+</table>
+<h3>4.3 Early-Morning Hours (0–3) Summary</h3>
+<p>Hours 0–3 total 8568 rows — 16.69% of all rows — yet contribute 27.31% of the SSE; the RMSE for this period is 41.97 (above the overall 32.80), with an actual mean of 86.64.</p>
+<h3>4.4 By Month</h3>
+<table>
+<thead>
+<tr>
+<th>Month</th>
+<th>Sample count</th>
+<th>Actual mean</th>
+<th>Predicted mean</th>
+<th>Bias</th>
+<th>RMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2015-09</td>
+<td>8436</td>
+<td>48.95</td>
+<td>47.22</td>
+<td>-1.73</td>
+<td>15.24</td>
+</tr>
+<tr>
+<td>2015-10</td>
+<td>8597</td>
+<td>71.86</td>
+<td>70.50</td>
+<td>-1.36</td>
+<td>20.12</td>
+</tr>
+<tr>
+<td>2015-11</td>
+<td>8425</td>
+<td>115.99</td>
+<td>103.58</td>
+<td>-12.41</td>
+<td>32.11</td>
+</tr>
+<tr>
+<td>2015-12</td>
+<td>8765</td>
+<td>150.15</td>
+<td>128.69</td>
+<td>-21.46</td>
+<td>50.54</td>
+</tr>
+<tr>
+<td>2016-01</td>
+<td>8856</td>
+<td>66.74</td>
+<td>64.29</td>
+<td>-2.45</td>
+<td>24.56</td>
+</tr>
+<tr>
+<td>2016-02</td>
+<td>8270</td>
+<td>42.90</td>
+<td>40.05</td>
+<td>-2.85</td>
+<td>40.24</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Squared-Error Concentration and Performance on High Values</h2>
+<h3>5.1 High-Concentration Threshold Segments: Row Share vs. SSE Share</h3>
+<p>Validation errors are heavily concentrated in the high-concentration segments: rows with actual ≥150 account for 18.37% of rows yet contribute 80.33% of the squared error; rows with ≥200 account for 12.21% and contribute 74.49%; rows with ≥300 account for 4.48% and contribute 60.08%.</p>
+<table>
+<thead>
+<tr>
+<th>Actual condition</th>
+<th>Sample count</th>
+<th>Row share</th>
+<th>SSE share</th>
+<th>RMSE</th>
+<th>MAE</th>
+<th>Actual mean</th>
+<th>Predicted mean</th>
+<th>Bias</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>y_true ≥ 150</td>
+<td>9432</td>
+<td>18.37%</td>
+<td>80.33%</td>
+<td>68.60</td>
+<td>45.44</td>
+<td>260.31</td>
+<td>220.11</td>
+<td>-40.20</td>
+</tr>
+<tr>
+<td>y_true ≥ 200</td>
+<td>6269</td>
+<td>12.21%</td>
+<td>74.49%</td>
+<td>81.03</td>
+<td>55.71</td>
+<td>304.81</td>
+<td>253.30</td>
+<td>-51.50</td>
+</tr>
+<tr>
+<td>y_true ≥ 300</td>
+<td>2298</td>
+<td>4.48%</td>
+<td>60.08%</td>
+<td>120.18</td>
+<td>90.38</td>
+<td>411.96</td>
+<td>323.77</td>
+<td>-88.19</td>
+</tr>
+</tbody>
+</table>
+<p>The bias is negative (underestimation) in every threshold segment, and the higher the threshold the larger the absolute bias: the ≥300 segment is underestimated by -88.19 on average.</p>
+<h3>5.2 Extreme Values (Actual &gt;600)</h3>
+<p>The 163 rows with actual &gt;600 account for only 0.32% of all rows yet contribute 24.26% of the SSE; for this segment the actual mean is 660.97 while the predicted mean is only 414.80, with an RMSE as high as 286.75.</p>
+<h3>5.3 The 1% / 5% Rows with the Largest Absolute Errors</h3>
+<p>The top 1% of rows by absolute error (513 rows, minimum absolute error 133.47) contribute 47.52% of the SSE, with an actual mean of 484.78; the top 5% of rows (2567 rows, minimum absolute error 59.79) contribute 75.24% of the SSE.</p>
+<h3>5.4 Heavy-Pollution Detection and Clean-Day False Alarms</h3>
+<p>Detection capability: among the 9432 rows with actual ≥150, 83.00% have predictions ≥150 and only 1.08% have predictions &lt;100 (mean prediction 220.11).</p>
+<p>Clean-day false alarms: among the 27951 rows with actual ≤50, 0.30% have predictions &gt;100 and 0.07% have predictions &gt;150.</p>
+<h3>5.5 Input Environment Profiles Across Error Scenarios</h3>
+<p>Compares five groups of rows — all / actual ≥150 / actual ≥300 / |error|&gt;75 / actual ≥150 and underestimated (under_pred_ge150 denotes rows with actual ≥150 whose prediction is below the actual) — in terms of mean pollutant and meteorological inputs.</p>
+<table>
+<thead>
+<tr>
+<th>Input variable</th>
+<th>All</th>
+<th>Actual ≥150</th>
+<th>Actual ≥300</th>
+<th>|error|&gt;75</th>
+<th>Actual ≥150, underestimated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PM10 (μg/m³)</td>
+<td>96.28</td>
+<td>267.08</td>
+<td>418.42</td>
+<td>377.26</td>
+<td>160.06</td>
+</tr>
+<tr>
+<td>SO2 (μg/m³)</td>
+<td>12.82</td>
+<td>25.88</td>
+<td>29.29</td>
+<td>32.68</td>
+<td>21.75</td>
+</tr>
+<tr>
+<td>NO2 (μg/m³)</td>
+<td>52.12</td>
+<td>99.51</td>
+<td>130.32</td>
+<td>117.62</td>
+<td>76.89</td>
+</tr>
+<tr>
+<td>CO (μg/m³)</td>
+<td>1501.98</td>
+<td>3751.71</td>
+<td>5630.98</td>
+<td>5306.48</td>
+<td>2374.42</td>
+</tr>
+<tr>
+<td>O3 (μg/m³)</td>
+<td>34.45</td>
+<td>20.29</td>
+<td>19.16</td>
+<td>12.49</td>
+<td>20.69</td>
+</tr>
+<tr>
+<td>Temperature (℃)</td>
+<td>5.56</td>
+<td>4.44</td>
+<td>2.56</td>
+<td>0.34</td>
+<td>4.88</td>
+</tr>
+<tr>
+<td>Wind speed (m/s)</td>
+<td>1.80</td>
+<td>1.05</td>
+<td>1.04</td>
+<td>1.18</td>
+<td>1.17</td>
+</tr>
+<tr>
+<td>Dew point (℃)</td>
+<td>-4.04</td>
+<td>0.58</td>
+<td>-0.30</td>
+<td>-3.70</td>
+<td>-0.20</td>
+</tr>
+<tr>
+<td>Pressure (hPa)</td>
+<td>1018.95</td>
+<td>1017.58</td>
+<td>1016.33</td>
+<td>1017.34</td>
+<td>1018.48</td>
+</tr>
+<tr>
+<td>Rainfall (mm)</td>
+<td>0.04</td>
+<td>0.0085</td>
+<td>0.0012</td>
+<td>0.04</td>
+<td>0.0031</td>
+</tr>
+<tr>
+<td>Sample count n</td>
+<td>51349</td>
+<td>9432</td>
+<td>2298</td>
+<td>1683</td>
+<td>1603</td>
+</tr>
+<tr>
+<td>Actual mean</td>
+<td>83.15</td>
+<td>260.31</td>
+<td>411.96</td>
+<td>376.40</td>
+<td>174.88</td>
+</tr>
+<tr>
+<td>Predicted mean</td>
+<td>76.06</td>
+<td>220.11</td>
+<td>323.77</td>
+<td>273.89</td>
+<td>129.29</td>
+</tr>
+</tbody>
+</table>
+<p>Rows with large errors (actual ≥150 / ≥300 / |error|&gt;75) correspond to markedly higher PM10, SO2, NO2, CO and lower wind speed: high-concentration stagnant-weather conditions are precisely the scenario where underestimation concentrates.</p>
+<h3>5.6 Training / Validation Distribution Differences</h3>
+<table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Sample count</th>
+<th>Mean</th>
+<th>Share of actual &gt;150</th>
+<th>Share of actual &gt;300</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Training set</td>
+<td>257927</td>
+<td>79.81</td>
+<td>14.96%</td>
+<td>1.80%</td>
+</tr>
+<tr>
+<td>Validation set</td>
+<td>51349</td>
+<td>83.15</td>
+<td>18.20%</td>
+<td>4.45%</td>
+</tr>
+</tbody>
+</table>
+<p>The validation set (heating season) has a markedly higher heavy-pollution share than the training set (&gt;150: 14.96% vs. 18.20%; &gt;300: 1.80% vs. 4.45%); the distribution shift amplifies errors in the high-value segments.</p>
+<hr />
+<h2>6. Heavy-Pollution Event (Daily Peak) Detection</h2>
+<p>The 8 pollution days with the highest actual means in the validation period (daily-level events, aggregated by date) are listed below.</p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Rows that day</th>
+<th>Actual mean</th>
+<th>Predicted mean</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2016-02-08</td>
+<td>84</td>
+<td>559.65</td>
+<td>252.24</td>
+</tr>
+<tr>
+<td>2015-12-25</td>
+<td>270</td>
+<td>487.40</td>
+<td>370.91</td>
+</tr>
+<tr>
+<td>2015-12-01</td>
+<td>276</td>
+<td>473.04</td>
+<td>365.04</td>
+</tr>
+<tr>
+<td>2015-11-30</td>
+<td>194</td>
+<td>429.95</td>
+<td>325.23</td>
+</tr>
+<tr>
+<td>2015-12-24</td>
+<td>67</td>
+<td>394.03</td>
+<td>239.44</td>
+</tr>
+<tr>
+<td>2015-12-26</td>
+<td>211</td>
+<td>340.25</td>
+<td>318.47</td>
+</tr>
+<tr>
+<td>2015-12-30</td>
+<td>47</td>
+<td>334.49</td>
+<td>283.35</td>
+</tr>
+<tr>
+<td>2015-12-22</td>
+<td>240</td>
+<td>324.05</td>
+<td>263.60</td>
+</tr>
+</tbody>
+</table>
+<p>On the most extreme pollution day, 2016-02-08, the actual mean was 559.65 while the day's average prediction was only 252.24 — event-scale severe underestimation is one of the main sources of overall error.</p>
+<h3>6.1 The 10 Rows with the Largest Absolute Errors</h3>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Station</th>
+<th>Actual</th>
+<th>Predicted</th>
+<th>Absolute error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2016-02-08 00:00:00</td>
+<td>Dingling</td>
+<td>881</td>
+<td>25.26</td>
+<td>855.74</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Changping</td>
+<td>882</td>
+<td>97.17</td>
+<td>784.83</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Wanshouxigong</td>
+<td>999</td>
+<td>228.32</td>
+<td>770.68</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Shunyi</td>
+<td>941</td>
+<td>250.58</td>
+<td>690.42</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Wanliu</td>
+<td>957</td>
+<td>299.22</td>
+<td>657.78</td>
+</tr>
+<tr>
+<td>2016-02-08 01:00:00</td>
+<td>Aotizhongxin</td>
+<td>898</td>
+<td>241.09</td>
+<td>656.91</td>
+</tr>
+<tr>
+<td>2016-02-08 00:00:00</td>
+<td>Wanshouxigong</td>
+<td>826</td>
+<td>192.20</td>
+<td>633.80</td>
+</tr>
+<tr>
+<td>2016-02-08 02:00:00</td>
+<td>Wanshouxigong</td>
+<td>857</td>
+<td>243.77</td>
+<td>613.23</td>
+</tr>
+<tr>
+<td>2016-02-08 00:00:00</td>
+<td>Shunyi</td>
+<td>816</td>
+<td>221.20</td>
+<td>594.80</td>
+</tr>
+<tr>
+<td>2016-02-08 02:00:00</td>
+<td>Tiantan</td>
+<td>821</td>
+<td>241.41</td>
+<td>579.59</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>7. Calibration Scenario Simulations</h2>
+<h3>7.1 Hypothetical Scenario: How Much the Overall RMSE Would Drop If High-Value-Segment Errors Were Eliminated / Halved</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>RMSE (μg/m³)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Current model (baseline)</td>
+<td>32.80</td>
+</tr>
+<tr>
+<td>Errors on rows with actual ≥150 halved</td>
+<td>20.68</td>
+</tr>
+<tr>
+<td>Errors on rows with actual ≥150 zeroed</td>
+<td>14.55</td>
+</tr>
+<tr>
+<td>Errors on rows with actual ≥300 halved</td>
+<td>24.31</td>
+</tr>
+<tr>
+<td>Errors on rows with actual ≥300 zeroed</td>
+<td>20.73</td>
+</tr>
+</tbody>
+</table>
+<p>If errors on rows with actual ≥150 were completely eliminated, the overall RMSE could drop from 32.80 to 14.55; addressing only the ≥300 segment would still bring it down to 20.73 — the high-value segment is the direction with the greatest room for improvement.</p>
+<h3>7.2 Segmented Multiplicative Calibration (Out-of-Sample Validation)</h3>
+<p>Multiplicative factors are estimated per bin of predicted value on a calibration set, then applied to a temporally non-overlapping evaluation set:</p>
+<table>
+<thead>
+<tr>
+<th>Predicted range</th>
+<th>Calibration-set sample count</th>
+<th>Calibration factor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0-20</td>
+<td>6561</td>
+<td>0.99</td>
+</tr>
+<tr>
+<td>20-40</td>
+<td>5009</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>40-60</td>
+<td>3184</td>
+<td>1.01</td>
+</tr>
+<tr>
+<td>60-80</td>
+<td>2715</td>
+<td>1.02</td>
+</tr>
+<tr>
+<td>80-100</td>
+<td>1906</td>
+<td>1.06</td>
+</tr>
+<tr>
+<td>100-150</td>
+<td>2417</td>
+<td>1.10</td>
+</tr>
+<tr>
+<td>150-200</td>
+<td>1356</td>
+<td>1.10</td>
+</tr>
+<tr>
+<td>200-300</td>
+<td>1944</td>
+<td>1.09</td>
+</tr>
+<tr>
+<td>&gt;300</td>
+<td>366</td>
+<td>1.18</td>
+</tr>
+</tbody>
+</table>
+<p>Calibration set: 25458 rows (2015-09-01→2015-11-30); evaluation set: 25891 rows (2015-12-01→2016-02-29, actual mean 87.36, original predicted mean 78.35). The in-sample RMSE on the calibration set is 20.56.</p>
+<table>
+<thead>
+<tr>
+<th>Evaluation-set metric</th>
+<th>Original model</th>
+<th>After segmented calibration</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RMSE (μg/m³)</td>
+<td>39.86</td>
+<td>34.60</td>
+<td>-13.19%</td>
+</tr>
+<tr>
+<td>MAE (μg/m³)</td>
+<td>18.75</td>
+<td>16.30</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>On the out-of-sample evaluation set, segmented calibration reduces RMSE from 39.86 to 34.60 (a drop of -13.19%) and MAE from 18.75 to 16.30.</p>
+<h3>7.3 Reference: Box-Cox Transformed Target Scale</h3>
+<table>
+<thead>
+<tr>
+<th>Reference model</th>
+<th>Sample count</th>
+<th>RMSE</th>
+<th>MAE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Box-Cox transform (inverse-transformed back to original scale)</td>
+<td>51349</td>
+<td>38.06</td>
+<td>18.03</td>
+</tr>
+</tbody>
+</table>
+<p>As a reference, the model trained with a Box-Cox-transformed target and evaluated on the original scale has an RMSE of 38.06 (MAE 18.03), higher than the current model's 32.80 / 16.38.</p>
+<hr />
+<h2>8. Conclusions and Improvement Recommendations</h2>
+<p><strong>1. Errors concentrate in the high-concentration segment and extreme pollution events and should be prioritized for targeted treatment.</strong> Rows with actual ≥150 account for only 18.37% yet contribute 80.33% of the SSE; the 163 rows &gt;600 contribute 24.26% of the SSE, and on the event day with the highest daily actual mean (2016-02-08), actual was 559.65 vs. predicted 252.24. Recommendation: model heavy-pollution episodes separately or weight them (e.g., error-sensitive training weighting / upsampling on rows with actual ≥150), and build dedicated threshold-alert models for extreme events.</p>
+<p><strong>2. Errors are elevated during the nighttime hours (0–3).</strong> This period accounts for 16.69% of rows yet contributes 27.31% of the SSE, with an RMSE of 41.97 above the overall 32.80. Recommendation: add nighttime meteorological and temperature-inversion-related features, or fit per-hour sub-models and give the nighttime segment greater error weight.</p>
+<p><strong>3. Segmented multiplicative calibration is effective out of sample and can continue to be used and extended.</strong> On the evaluation set, RMSE drops from 39.86 to 34.60 (a drop of -13.19%), with the calibration factor reaching 1.18 for the &gt;300 segment; the high-value-segment hypothetical scenario also shows that eliminating errors on ≥150 could reduce the overall RMSE from 32.80 to 14.55. Recommendation: stack segmented calibration after model prediction, and continue reducing the original model's bias in the high-value segments that have the largest calibration factors.</p>
+<hr />
+<p><em>Note: All values in this report are rounded from the raw JSON values under a uniform rule (integers stay integers, other values are kept to two decimal places, and values below 0.01 are kept to four decimal places); percentage fields are already expressed as percentages in the JSON.</em></p></section>
+<script>
+function setLang(l){
+  document.documentElement.lang=l;
+  document.querySelectorAll('section').forEach(function(s){s.style.display=(s.getAttribute('lang')===l)?'block':'none';});
+  document.getElementById('btnZh').classList.toggle('active',l==='zh');
+  document.getElementById('btnEn').classList.toggle('active',l==='en');
+  try{localStorage.setItem('aq_lang',l);}catch(e){}
+}
+setLang((localStorage.getItem('aq_lang')==='en')?'en':'zh');
+</script>
+</body></html>

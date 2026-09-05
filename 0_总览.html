@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>Beijing Air Quality Datathon · Results Overview / 成果总览</title>
+<style>
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;max-width:960px;margin:0 auto;padding:70px 20px 40px;color:#222;line-height:1.7;background:#fafbfc}
+.langbar{position:fixed;top:0;left:0;right:0;background:#1F4E79;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:99;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.langbar .t{font-weight:bold;margin-right:auto}
+.langbar button{background:#fff;color:#1F4E79;border:none;border-radius:4px;padding:6px 16px;cursor:pointer;font-size:14px;font-weight:bold}
+.langbar button.active{background:#f0a500;color:#fff}
+h1{color:#1F4E79;border-bottom:3px solid #1F4E79;padding-bottom:8px}
+h2{color:#1F4E79;border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:32px}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid #d0d0d0;padding:7px 10px;text-align:left;font-size:14px}
+th{background:#1F4E79;color:#fff}
+tr:nth-child(even){background:#f4f7fa}
+.hl{background:#fff8e1!important;font-weight:bold}
+a{color:#1F4E79}
+code{background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:13px}
+.note{background:#fff8e1;border-left:4px solid #f0a500;padding:10px 14px;margin:14px 0}
+img{max-width:100%}
+section[lang="en"]{display:none}
+</style></head><body>
+
+<div class="langbar"><span class="t">🌐 Beijing AQ Datathon · 成果总览</span>
+<button id="btnZh" class="active" onclick="setLang('zh')">中文</button>
+<button id="btnEn" onclick="setLang('en')">English</button></div>
+
+<section lang="zh">
+<h1>📊 Inter-uni Datathon Stream 2 · 北京多站点空气质量</h1>
+<p>预测 PM2.5 下一小时浓度（μg/m³）· 评分 RMSE（越低越好）· <b>Random Forest 主导方法</b> · 协作：Hermes 总管 + 多 Agent</p>
+<h2>1. 模型成绩（验证集 2015-09→2016-02 供暖季，51,349 行）</h2>
+<table>
+<tr><th>模型</th><th>验证 RMSE</th><th>MAE</th><th>说明</th></tr>
+<tr><td>常数基线（主办方级别）</td><td>102.04</td><td>—</td><td>全部预测训练均值</td></tr>
+<tr><td>线性回归（无滞后）</td><td>36.09</td><td>—</td><td>参照</td></tr>
+<tr><td>LightGBM</td><td>33.00</td><td>16.00</td><td>参照（早停166轮）</td></tr>
+<tr><td>LGBM v2（lr=0.03，237轮）</td><td>32.96</td><td>16.10</td><td>单模型最优；但与RF更相似（相关0.9949），集成增益反降</td></tr>
+<tr><td>RF boxcox（实验）</td><td>38.06</td><td>18.03</td><td>目标变换实验：raw 胜，如实记录</td></tr>
+<tr><td><b>Random Forest（主导）</b></td><td><b>32.80</b></td><td><b>16.38</b></td><td>200树/深30/叶3</td></tr>
+<tr class="hl"><td>🏆 Ensemble 0.6RF+0.4LGBM</td><td><b>32.58</b></td><td>~16.1</td><td>权重扫描最优 → <b>推荐提交</b></td></tr>
+<tr><td>Ensemble v2（0.55RF+0.45LGBMv2）</td><td>32.60</td><td>~16.1</td><td>v2集成备选：单模型更强但互补性降</td></tr>
+</table>
+<p style="color:#666">所有数字经独立重算验收（做判分离）。特征：119 个（污染物/气象滞后 1-24h 小时网格对齐 + 滚动统计 + 时间环），防泄漏设计（无 PM2.5 自身滞后）。</p>
+<h2>2. 提交文件（4 份，全部已校验：51,063 行 / id 顺序=模板 / 无缺失）</h2>
+<table>
+<tr><th>文件</th><th>验证 RMSE</th><th>用法</th></tr>
+<tr><td>submission_ensemble_w0.60.csv</td><td><b>32.58</b></td><td>🎯 <b>主提交（推荐）</b></td></tr>
+<tr><td>submission_rf_raw.csv</td><td>32.80</td><td>备选</td></tr>
+<tr><td>submission_lgbm.csv</td><td>33.00</td><td>备选</td></tr>
+<tr><td>submission_ensemble_v2_w0.55.csv</td><td>32.60</td><td>备选（v2集成）</td></tr>
+</table>
+<p>📌 打开任意 CSV：应看到两列 <code>id, PM2_5_next_hour</code>，共 51,063 行数据。📥 <a href="submission_ensemble_w0.60.csv">下载主提交</a> · <a href="submission_rf_raw.csv">RF版</a> · <a href="submission_lgbm.csv">LGBM版</a> · <a href="submission_ensemble_v2_w0.55.csv">v2集成版</a></p>
+<h2>3. 报告（点击打开，均含中英切换）</h2>
+<table>
+<tr><th>报告</th><th>内容</th></tr>
+<tr><td><a href="1_数据探索EDA报告.html">1_数据探索EDA报告.html</a></td><td>数据全貌：分布/站点/季节/相关性/Box-Cox λ/基线</td></tr>
+<tr><td><a href="2_模型误差分析.html">2_模型误差分析.html</a></td><td>模型在哪失效：18.4% 重污染行 = 80.3% 误差</td></tr>
+<tr><td><a href="3_洞察故事包_演示底稿.html">3_洞察故事包_演示底稿.html</a></td><td>周一演示叙事 + 公共卫生建议</td></tr>
+</table>
+<h2>4. 关键图表</h2>
+<p><img src="fig4_feature_importance.png" style="max-width:640px"></p>
+<p style="color:#666">特征重要性：PM10 独大(72%) + CO(10%) → 实时污染物是下一小时 PM2.5 的最强预测信号（PM10 r=0.85）。</p>
+<h3>LGBM v2 长跑实验结论（训练曲线为证）</h3>
+<p><img src="fig_lgbm_v2_curve.png" style="max-width:640px"></p>
+<p style="color:#666">学习率 0.03 的模型跑到第 237 轮才触底（RMSE 32.96，优于原版 lr=0.05 的 166 轮/33.00）——证明"早停 166 轮"确实是次优早停，小步长多找到了 0.04 的精度。触底后它又试了 200 轮均无改进才停（437 轮），证明早停机制本身零浪费。但 v2 与 RF 预测更像（相关 0.9949 vs 0.9941），集成互补性下降，最终主提交仍是 v1 集成（32.576）。</p>
+<h2>5. 自查指南</h2>
+<div class="note">① CSV：Excel 打开 → 51,063 行 + id 以 AQ_ 开头<br>② 成绩锚点：上传 submission_ensemble_w0.60.csv 到 Kaggle 拿 LB 分数<br>③ 原始材料：WSL 路径 <code>\\wsl.localhost\Ubuntu-24.04\home\gaogao\workspace\beijing_aq</code></div>
+</section>
+
+<section lang="en">
+<h1>📊 Inter-uni Datathon Stream 2 · Beijing Multi-Site Air Quality</h1>
+<p>Objective: forecast next-hour PM2.5 concentration (μg/m³) · Metric: RMSE (lower is better) · <b>Random Forest as the lead method</b> · Built by: Hermes (manager) + multi-agent team</p>
+<h2>1. Model Results (validation: 2015-09 → 2016-02 heating season, 51,349 station-hours)</h2>
+<table>
+<tr><th>Model</th><th>Val RMSE</th><th>MAE</th><th>Notes</th></tr>
+<tr><td>Constant baseline (organiser-level)</td><td>102.04</td><td>—</td><td>predicting the global train mean</td></tr>
+<tr><td>Linear regression (no lags)</td><td>36.09</td><td>—</td><td>reference</td></tr>
+<tr><td>LightGBM</td><td>33.00</td><td>16.00</td><td>reference (early stopping @166)</td></tr>
+<tr><td>LGBM v2 (lr=0.03, 237 rounds)</td><td>32.96</td><td>16.10</td><td>best single model; more similar to RF (corr 0.9949) → less ensemble gain</td></tr>
+<tr><td>RF boxcox (experiment)</td><td>38.06</td><td>18.03</td><td>target-transform experiment; raw wins, reported honestly</td></tr>
+<tr><td><b>Random Forest (lead)</b></td><td><b>32.80</b></td><td><b>16.38</b></td><td>200 trees / depth 30 / leaf 3</td></tr>
+<tr class="hl"><td>🏆 Ensemble 0.6 RF + 0.4 LGBM</td><td><b>32.58</b></td><td>~16.1</td><td>optimal weight by grid search → <b>recommended submission</b></td></tr>
+<tr><td>Ensemble v2 (0.55 RF + 0.45 LGBMv2)</td><td>32.60</td><td>~16.1</td><td>v2 blend backup: stronger single model but less complementarity</td></tr>
+</table>
+<p style="color:#666">Every number was independently recomputed and verified (separation of producer and verifier). Features: 119 (pollutant/meteorological lags of 1–24 h aligned to the true hourly grid + rolling statistics + cyclic time features), leakage-safe design (no PM2.5 self-lags).</p>
+<h2>2. Submission Files (all validated: 51,063 rows / id order matches template / no missing)</h2>
+<table>
+<tr><th>File</th><th>Val RMSE</th><th>Use</th></tr>
+<tr><td>submission_ensemble_w0.60.csv</td><td><b>32.58</b></td><td>🎯 <b>Primary (recommended)</b></td></tr>
+<tr><td>submission_rf_raw.csv</td><td>32.80</td><td>backup</td></tr>
+<tr><td>submission_lgbm.csv</td><td>33.00</td><td>backup</td></tr>
+<tr><td>submission_ensemble_v2_w0.55.csv</td><td>32.60</td><td>backup (v2 blend)</td></tr>
+</table>
+<p>📌 Open any CSV: two columns <code>id, PM2_5_next_hour</code>, 51,063 data rows. 📥 <a href="submission_ensemble_w0.60.csv">Download primary</a> · <a href="submission_rf_raw.csv">RF</a> · <a href="submission_lgbm.csv">LGBM</a> · <a href="submission_ensemble_v2_w0.55.csv">v2 blend</a></p>
+<h2>3. Reports (click to open, each with CN/EN toggle)</h2>
+<table>
+<tr><th>Report</th><th>Content</th></tr>
+<tr><td><a href="1_数据探索EDA报告.html">1_数据探索EDA报告.html</a></td><td>Full EDA: distribution/stations/seasonality/correlations/Box-Cox λ/baselines</td></tr>
+<tr><td><a href="2_模型误差分析.html">2_模型误差分析.html</a></td><td>Where the model fails: 18.4% of heavy-pollution rows = 80.3% of error</td></tr>
+<tr><td><a href="3_洞察故事包_演示底稿.html">3_洞察故事包_演示底稿.html</a></td><td>Presentation narrative + public-health implications</td></tr>
+</table>
+<h2>4. Key Figures</h2>
+<p><img src="fig4_feature_importance.png" style="max-width:640px"></p>
+<p style="color:#666">Feature importance: PM10 dominates (72%) + CO (10%) → real-time pollutant readings are the strongest predictors of next-hour PM2.5 (PM10 r=0.85).</p>
+<h3>LGBM v2 long-run experiment (training curve as evidence)</h3>
+<p><img src="fig_lgbm_v2_curve.png" style="max-width:640px"></p>
+<p style="color:#666">With learning rate 0.03 the model only bottomed out at round 237 (RMSE 32.96, better than the original lr=0.05 run that stopped at round 166 / 33.00) — the earlier stop was indeed slightly premature, and the smaller step recovered 0.04 of accuracy. After bottoming out it kept trying for 200 more rounds without improvement (stopped at 437), proving the early-stopping mechanism itself wastes nothing. However, v2 predictions are more similar to RF (corr 0.9949 vs 0.9941), so ensemble complementarity drops and the primary submission remains the v1 blend (32.576).</p>
+<h2>5. How to Verify</h2>
+<div class="note">① CSV: open in Excel → 51,063 rows, ids start with AQ_<br>② Anchor score: upload submission_ensemble_w0.60.csv to Kaggle and read the LB score<br>③ Raw materials: in WSL at <code>\\wsl.localhost\Ubuntu-24.04\home\gaogao\workspace\beijing_aq</code></div>
+</section>
+
+<script>
+function setLang(l){
+  document.documentElement.lang=l;
+  document.querySelectorAll('section').forEach(function(s){s.style.display=(s.getAttribute('lang')===l)?'block':'none';});
+  document.getElementById('btnZh').classList.toggle('active',l==='zh');
+  document.getElementById('btnEn').classList.toggle('active',l==='en');
+  try{localStorage.setItem('aq_lang',l);}catch(e){}
+}
+setLang(localStorage.getItem('aq_lang')==='en'?'en':'zh');
+</script>
+</body></html>
