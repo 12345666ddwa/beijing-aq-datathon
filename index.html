@@ -42,19 +42,24 @@ section[lang="en"]{display:none}
 <tr><td>Ensemble v2（0.55RF+0.45LGBMv2）</td><td>32.60</td><td>~16.1</td><td>v2集成备选：单模型更强但互补性降</td></tr>
 <tr><td>🏆🏆 <b>RF-xst（跨站特征）</b></td><td><b>29.33</b></td><td>15.05</td><td>+24跨站风输送特征，单模型大突破</td></tr>
 <tr><td>LGBM-xst（跨站特征）</td><td>29.44</td><td>14.76</td><td>早停218轮</td></tr>
-<tr style="background:#e8f5e9!important"><td>🥇 <b>Ensemble-xst 0.55/0.45（当前主提交）</b></td><td><b>28.96</b></td><td>~14.9</td><td>⭐ <b>LB 实测 27.34</b>（验证集保守 1.6）</td></tr>
+<tr><td>XGB-xst（跨站特征）</td><td>29.59</td><td><b>14.62</b></td><td>MAE 最佳，与 RF 互补入选最终集成</td></tr>
+<tr><td>ExtraTrees-xst / LGBMv2-xst / RF-400</td><td>29.98 / 29.79 / 29.32</td><td>—</td><td>实验如实记录：无增量，未入选</td></tr>
+<tr style="background:#e8f5e9!important"><td>🥇 <b>Ensemble3 0.5RF+0.35XGB+0.15LGBM（最终）</b></td><td><b>28.88</b></td><td>~14.8</td><td>⭐ <b>LB 27.17 全场最佳（冻结）</b></td></tr>
+<tr><td>Ensemble-xst 0.55/0.45</td><td>28.96</td><td>~14.9</td><td>LB 27.34（历史）</td></tr>
 </table>
 <p style="color:#666">所有数字经独立重算验收（做判分离）。特征：119 个（污染物/气象滞后 1-24h 小时网格对齐 + 滚动统计 + 时间环），防泄漏设计（无 PM2.5 自身滞后）。</p>
 <h2>2. 提交文件（5 份，全部已校验：51,063 行 / id 顺序=模板 / 无缺失）</h2>
 <table>
 <tr><th>文件</th><th>验证 RMSE</th><th>用法</th></tr>
-<tr style="background:#e8f5e9!important"><td>submission_ensemble_xst.csv</td><td><b>28.96</b></td><td>🥇 <b>当前主提交（LB 实测 27.34 ✅）</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>submission_ensemble3.csv</td><td><b>28.88</b></td><td>🥇 <b>最终提交（LB 27.17158 ✅）</b></td></tr>
+<tr><td>submission_ensemble_xst.csv</td><td>28.96</td><td>LB 27.34（历史）</td></tr>
+<tr><td>submission_calibrated.csv</td><td>—</td><td>校准版已弃用（LB 27.90，分布漂移教训）</td></tr>
 <tr><td>submission_ensemble_w0.60.csv</td><td>32.58</td><td>历史最优（xst 之前）</td></tr>
 <tr><td>submission_rf_raw.csv</td><td>32.80</td><td>备选</td></tr>
 <tr><td>submission_lgbm.csv</td><td>33.00</td><td>备选</td></tr>
 <tr><td>submission_ensemble_v2_w0.55.csv</td><td>32.60</td><td>备选（v2集成）</td></tr>
 </table>
-<p>📌 打开任意 CSV：应看到两列 <code>id, PM2_5_next_hour</code>，共 51,063 行数据。📥 <a href="submission_ensemble_w0.60.csv">下载主提交</a> · <a href="submission_rf_raw.csv">RF版</a> · <a href="submission_lgbm.csv">LGBM版</a> · <a href="submission_ensemble_v2_w0.55.csv">v2集成版</a></p>
+<p>📌 打开任意 CSV：应看到两列 <code>id, PM2_5_next_hour</code>，共 51,063 行数据。📥 <a href="submission_ensemble3.csv">下载最终提交</a> · <a href="submission_ensemble_xst.csv">xst版</a> · <a href="submission_rf_raw.csv">RF版</a></p>
 <h2>3. 报告（点击打开，均含中英切换）</h2>
 <table>
 <tr><th>报告</th><th>内容</th></tr>
@@ -69,7 +74,7 @@ section[lang="en"]{display:none}
 <p><img src="fig_lgbm_v2_curve.png" style="max-width:640px"></p>
 <p style="color:#666">学习率 0.03 的模型跑到第 237 轮才触底（RMSE 32.96，优于原版 lr=0.05 的 166 轮/33.00）——证明"早停 166 轮"确实是次优早停，小步长多找到了 0.04 的精度。触底后它又试了 200 轮均无改进才停（437 轮），证明早停机制本身零浪费。但 v2 与 RF 预测更像（相关 0.9949 vs 0.9941），集成互补性下降，最终主提交仍是 v1 集成（32.576）。</p>
 <h2>5. 自查指南</h2>
-<div class="note">① CSV：Excel 打开 → 51,063 行 + id 以 AQ_ 开头<br>② 成绩锚点：上传 submission_ensemble_w0.60.csv 到 Kaggle 拿 LB 分数<br>③ 原始材料：WSL 路径 <code>\\wsl.localhost\Ubuntu-24.04\home\gaogao\workspace\beijing_aq</code></div>
+<div class="note">① CSV：Excel 打开 → 51,063 行 + id 以 AQ_ 开头<br>② 成绩：submission_ensemble3.csv → LB 27.17158（Kaggle 最佳）<br>③ 原始材料：WSL 路径 <code>\\wsl.localhost\Ubuntu-24.04\home\gaogao\workspace\beijing_aq</code></div>
 </section>
 
 <section lang="en">
@@ -88,19 +93,24 @@ section[lang="en"]{display:none}
 <tr><td>Ensemble v2 (0.55 RF + 0.45 LGBMv2)</td><td>32.60</td><td>~16.1</td><td>v2 blend backup: stronger single model but less complementarity</td></tr>
 <tr><td>🏆🏆 <b>RF-xst (cross-station features)</b></td><td><b>29.33</b></td><td>15.05</td><td>+24 wind-transport features; single-model breakthrough</td></tr>
 <tr><td>LGBM-xst (cross-station features)</td><td>29.44</td><td>14.76</td><td>early stop @218</td></tr>
-<tr style="background:#e8f5e9!important"><td>🥇 <b>Ensemble-xst 0.55/0.45 (current primary)</b></td><td><b>28.96</b></td><td>~14.9</td><td>⭐ <b>LB 27.34</b> (validation is conservative by ~1.6)</td></tr>
+<tr><td>XGB-xst (cross-station features)</td><td>29.59</td><td><b>14.62</b></td><td>best MAE; complementary with RF → in final blend</td></tr>
+<tr><td>ExtraTrees-xst / LGBMv2-xst / RF-400</td><td>29.98 / 29.79 / 29.32</td><td>—</td><td>experiments reported honestly: no gain, not selected</td></tr>
+<tr style="background:#e8f5e9!important"><td>🥇 <b>Ensemble3 0.5RF+0.35XGB+0.15LGBM (FINAL)</b></td><td><b>28.88</b></td><td>~14.8</td><td>⭐ <b>LB 27.17 best (frozen)</b></td></tr>
+<tr><td>Ensemble-xst 0.55/0.45</td><td>28.96</td><td>~14.9</td><td>LB 27.34 (historical)</td></tr>
 </table>
 <p style="color:#666">Every number was independently recomputed and verified (separation of producer and verifier). Features: 119 (pollutant/meteorological lags of 1–24 h aligned to the true hourly grid + rolling statistics + cyclic time features), leakage-safe design (no PM2.5 self-lags).</p>
 <h2>2. Submission Files (all validated: 51,063 rows / id order matches template / no missing)</h2>
 <table>
 <tr><th>File</th><th>Val RMSE</th><th>Use</th></tr>
-<tr style="background:#e8f5e9!important"><td>submission_ensemble_xst.csv</td><td><b>28.96</b></td><td>🥇 <b>Current primary (LB 27.34 ✅)</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>submission_ensemble3.csv</td><td><b>28.88</b></td><td>🥇 <b>FINAL (LB 27.17158 ✅)</b></td></tr>
+<tr><td>submission_ensemble_xst.csv</td><td>28.96</td><td>LB 27.34 (historical)</td></tr>
+<tr><td>submission_calibrated.csv</td><td>—</td><td>rejected (LB 27.90, distribution-shift lesson)</td></tr>
 <tr><td>submission_ensemble_w0.60.csv</td><td>32.58</td><td>previous best (pre-xst)</td></tr>
 <tr><td>submission_rf_raw.csv</td><td>32.80</td><td>backup</td></tr>
 <tr><td>submission_lgbm.csv</td><td>33.00</td><td>backup</td></tr>
 <tr><td>submission_ensemble_v2_w0.55.csv</td><td>32.60</td><td>backup (v2 blend)</td></tr>
 </table>
-<p>📌 Open any CSV: two columns <code>id, PM2_5_next_hour</code>, 51,063 data rows. 📥 <a href="submission_ensemble_w0.60.csv">Download primary</a> · <a href="submission_rf_raw.csv">RF</a> · <a href="submission_lgbm.csv">LGBM</a> · <a href="submission_ensemble_v2_w0.55.csv">v2 blend</a></p>
+<p>📌 Open any CSV: two columns <code>id, PM2_5_next_hour</code>, 51,063 data rows. 📥 <a href="submission_ensemble3.csv">Download final</a> · <a href="submission_ensemble_xst.csv">xst</a> · <a href="submission_rf_raw.csv">RF</a></p>
 <h2>3. Reports (click to open, each with CN/EN toggle)</h2>
 <table>
 <tr><th>Report</th><th>Content</th></tr>
@@ -115,7 +125,7 @@ section[lang="en"]{display:none}
 <p><img src="fig_lgbm_v2_curve.png" style="max-width:640px"></p>
 <p style="color:#666">With learning rate 0.03 the model only bottomed out at round 237 (RMSE 32.96, better than the original lr=0.05 run that stopped at round 166 / 33.00) — the earlier stop was indeed slightly premature, and the smaller step recovered 0.04 of accuracy. After bottoming out it kept trying for 200 more rounds without improvement (stopped at 437), proving the early-stopping mechanism itself wastes nothing. However, v2 predictions are more similar to RF (corr 0.9949 vs 0.9941), so ensemble complementarity drops and the primary submission remains the v1 blend (32.576).</p>
 <h2>5. How to Verify</h2>
-<div class="note">① CSV: open in Excel → 51,063 rows, ids start with AQ_<br>② Anchor score: upload submission_ensemble_w0.60.csv to Kaggle and read the LB score<br>③ Raw materials: in WSL at <code>\\wsl.localhost\Ubuntu-24.04\home\gaogao\workspace\beijing_aq</code></div>
+<div class="note">① CSV: open in Excel → 51,063 rows, ids start with AQ_<br>② Score: submission_ensemble3.csv → LB 27.17158 (Kaggle best)<br>③ Raw materials: in WSL at <code>\\wsl.localhost\Ubuntu-24.04\home\gaogao\workspace\beijing_aq</code></div>
 </section>
 
 <script>
