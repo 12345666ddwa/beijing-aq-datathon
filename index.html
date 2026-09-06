@@ -44,14 +44,14 @@ section[lang="en"]{display:none}
 <tr><td>LGBM-xst（跨站特征）</td><td>29.44</td><td>14.76</td><td>早停218轮</td></tr>
 <tr><td>XGB-xst（跨站特征）</td><td>29.59</td><td><b>14.62</b></td><td>MAE 最佳，与 RF 互补入选最终集成</td></tr>
 <tr><td>ExtraTrees-xst / LGBMv2-xst / RF-400</td><td>29.98 / 29.79 / 29.32</td><td>—</td><td>实验如实记录：无增量，未入选</td></tr>
-<tr style="background:#e8f5e9!important"><td>🥇 <b>FINAL：全量重训集成 RF200+XGB600+LGBM350（0.35/0.50/0.15）</b></td><td>—</td><td>—</td><td>⭐ <b>LB 24.50228（排行榜第15；public LB=30%测试，终榜按70%）</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>🥇 <b>FINAL：五族集成 g0.70·树系 + 0.15·LSTM + 0.15·CatBoost</b></td><td>—</td><td>—</td><td>⭐ <b>LB 24.19524（五族集成 FINAL：RF+XGB+LGBM+LSTM+CatBoost）</b></td></tr>
 <tr><td>Ensemble3 0.5RF+0.35XGB+0.15LGBM</td><td>28.88</td><td>~14.8</td><td>LB 27.17（历史）</td></tr>
 </table>
 <p style="color:#666">所有数字经独立重算验收（做判分离）。特征：119 个（污染物/气象滞后 1-24h 小时网格对齐 + 滚动统计 + 时间环），防泄漏设计（无 PM2.5 自身滞后）。</p>
 <h2>2. 提交文件（5 份，全部已校验：51,063 行 / id 顺序=模板 / 无缺失）</h2>
 <table>
 <tr><th>文件</th><th>验证 RMSE</th><th>用法</th></tr>
-<tr style="background:#e8f5e9!important"><td>submission_w_H.csv</td><td>—</td><td>🥇 <b>最终提交（LB 24.50228 ✅，排行榜第15）</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>submission_w_H.csv</td><td>—</td><td>🥇 <b>最终提交 submission_3way6（LB 24.19524 ✅）</b></td></tr>
 <tr><td>submission_ensemble3.csv</td><td>28.88</td><td>LB 27.17（历史）</td></tr>
 <tr><td>submission_ensemble_xst.csv</td><td>28.96</td><td>LB 27.34（历史）</td></tr>
 <tr><td>submission_calibrated.csv</td><td>—</td><td>校准版已弃用（LB 27.90，分布漂移教训）</td></tr>
@@ -96,14 +96,14 @@ section[lang="en"]{display:none}
 <tr><td>LGBM-xst (cross-station features)</td><td>29.44</td><td>14.76</td><td>early stop @218</td></tr>
 <tr><td>XGB-xst (cross-station features)</td><td>29.59</td><td><b>14.62</b></td><td>best MAE; complementary with RF → in final blend</td></tr>
 <tr><td>ExtraTrees-xst / LGBMv2-xst / RF-400</td><td>29.98 / 29.79 / 29.32</td><td>—</td><td>experiments reported honestly: no gain, not selected</td></tr>
-<tr style="background:#e8f5e9!important"><td>🥇 <b>FINAL: full-data ensemble RF200+XGB600+LGBM350 (0.35/0.50/0.15)</b></td><td>—</td><td>—</td><td>⭐ <b>LB 24.50228 (rank 15; public LB = 30% of test, final on 70%)</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>🥇 <b>FINAL: 0.70 trees-family + 0.15 LSTM + 0.15 CatBoost</b></td><td>—</td><td>—</td><td>⭐ <b>LB 24.19524 (FINAL 5-family ensemble: RF+XGB+LGBM+LSTM+CatBoost)</b></td></tr>
 <tr><td>Ensemble3 0.5RF+0.35XGB+0.15LGBM</td><td>28.88</td><td>~14.8</td><td>LB 27.17 (historical)</td></tr>
 </table>
 <p style="color:#666">Every number was independently recomputed and verified (separation of producer and verifier). Features: 119 (pollutant/meteorological lags of 1–24 h aligned to the true hourly grid + rolling statistics + cyclic time features), leakage-safe design (no PM2.5 self-lags).</p>
 <h2>2. Submission Files (all validated: 51,063 rows / id order matches template / no missing)</h2>
 <table>
 <tr><th>File</th><th>Val RMSE</th><th>Use</th></tr>
-<tr style="background:#e8f5e9!important"><td>submission_w_H.csv</td><td>—</td><td>🥇 <b>FINAL (LB 24.50228 ✅, rank 15)</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>submission_w_H.csv</td><td>—</td><td>🥇 <b>FINAL submission_3way6 (LB 24.19524 ✅)</b></td></tr>
 <tr><td>submission_ensemble3.csv</td><td>28.88</td><td>LB 27.17 (historical)</td></tr>
 <tr><td>submission_ensemble_xst.csv</td><td>28.96</td><td>LB 27.34 (historical)</td></tr>
 <tr><td>submission_calibrated.csv</td><td>—</td><td>rejected (LB 27.90, distribution-shift lesson)</td></tr>
