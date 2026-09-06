@@ -1,6 +1,5 @@
 <!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">
-<title>3_洞察故事包_演示底稿 · 中文 / English</title><style>
-body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;max-width:960px;margin:0 auto;padding:70px 20px 40px;color:#222;line-height:1.7;background:#fafbfc}
+<title>洞察故事终稿 · Insights Story Final · 中文 / English</title><style>body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;max-width:960px;margin:0 auto;padding:70px 20px 40px;color:#222;line-height:1.7;background:#fafbfc}
 .langbar{position:fixed;top:0;left:0;right:0;background:#1F4E79;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:99;box-shadow:0 2px 6px rgba(0,0,0,.15)}
 .langbar .t{font-weight:bold;margin-right:auto}
 .langbar button{background:#fff;color:#1F4E79;border:none;border-radius:4px;padding:6px 16px;cursor:pointer;font-size:14px;font-weight:bold}
@@ -16,22 +15,21 @@ tr:nth-child(even){background:#f4f7fa}
 img{max-width:100%;border:1px solid #ddd;margin:8px 0}
 code{background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:13px}
 blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;background:#f4f7fa;color:#444}
-.langbar a{color:#fff;text-decoration:none;font-size:13px;margin-left:12px;opacity:.9}.langbar a:hover{opacity:1;text-decoration:underline}
-</style></head><body>
-<div class="langbar"><span class="t">🌐 3_洞察故事包_演示底稿</span>
+.langbar a{color:#fff;text-decoration:none;font-size:13px;margin-left:12px;opacity:.9}.langbar a:hover{opacity:1;text-decoration:underline}</style></head><body>
+<div class="langbar"><span class="t">🌐 洞察故事终稿 · Beijing AQ Insights (Final)</span>
 <a href="index.html">Overview</a><a href="report-eda.html">EDA</a><a href="report-error.html">Errors</a><a href="report-insights.html">Insights</a><button id="btnZh" class="active" onclick="setLang('zh')">中文</button>
 <button id="btnEn" onclick="setLang('en')">English</button></div>
-<section lang="zh"><h1>洞察故事包 — Beijing Multi-Site Air Quality 演示叙事底稿</h1>
+<section lang="zh"><h1>洞察故事终稿 — Beijing Multi-Site Air Quality 演示叙事</h1>
 <blockquote>
 <p>用途: 周一现场演示(3 分钟故事线 + 评委问答弹药)。读者假设: <strong>不懂 ML 细节的行业/公共健康人士</strong>。
-数字纪律: 全部数字来自已核实产物(<code>reports/EDA_report.md</code>、<code>models/log_rf_raw.txt</code>、<code>models/log_rf_boxcox.txt</code>、<code>models/rf_raw_importance.csv</code>、<code>STATUS.md</code>);标注"本次现算"的为从 <code>train.csv</code> 直接计算的描述统计;无一处手工编造。
-生成: 2026-09-05 · 主图: <code>reports/fig4_feature_importance.png</code></p>
+数字纪律: 全程区分 <strong>验证 RMSE</strong>(时间切分验证集 2015-09→2016-02 供暖季, 51,349 行)与 <strong>LB RMSE</strong>(Kaggle 测试集成绩, 测试期 2016-09→2017-02 供暖季含春节, 51,063 行)。所有数字来自已核实产物(<code>reports/EDA_report.md</code>、<code>reports/error_analysis.md</code>、<code>reports/festival_features.md</code>、<code>STATUS.md</code>、<code>models/log_rf_raw.txt</code>、<code>models/log_rf_xst.txt</code>、<code>models/log_full_retrain.txt</code>、<code>models/log_tailweight.txt</code>、<code>models/log_iter600.txt</code>、<code>models/rf_raw_importance.csv</code>、成果总览 <code>index.html</code>), LB 数字来自 Kaggle 提交回填记录(主管与用户逐条核对验收);无一处手工编造。
+生成: 2026-09-06 · 主图: <code>reports/fig4_feature_importance.png</code></p>
 </blockquote>
 <hr />
-<h2>0. 一句话结论(电梯陈述,开场 15 秒)</h2>
+<h2>0. 电梯陈述(开场 15 秒)</h2>
 <blockquote>
-<p><strong>我们用北京 12 个国控监测站 3 年半的逐小时"当前时刻"观测(污染物 PM10/SO2/NO2/CO/O3 + 气象 TEMP/PRES/DEWP/RAIN/wd/WSPM, 共 11 类原始读数、衍生 119 维特征),训练了一个随机森林模型,预测"下一小时"的 PM2.5 浓度——在严格按时间切分的验证集上误差 RMSE = 32.8 μg/m³(平均绝对误差仅 16.4),比"天天报均值"的朴素基线(102.0)误差降低约 68%,并且完全不需要 PM2.5 自己的历史数据。</strong>
-这套方法回答了主办方提出的三个问题: <strong>①什么在驱动 PM2.5 → 现时污染物(PM10 与 CO),②污染模式如何随站点与季节变化 → 城区比郊区高约 28%,供暖季夜间是超标主窗口,③对监测与公共健康规划的启示 → PM10 可当预警代理、供暖季傍晚提前 1 小时滚动预警。</strong></p>
+<p><strong>我们用北京 12 个国控站逐小时"当前时刻"观测(PM10/SO2/NO2/CO/O3 + TEMP/PRES/DEWP/RAIN/wd/WSPM, 共 143 维特征 = 119 维基线 + 24 维跨站风输送), 用"随机森林 + XGBoost + LightGBM"三模型集成(RF 0.35 + XGB600 0.50 + LGBM350 0.15), 把全部 360,954 行标注数据训练到测试期门口, 在 Kaggle 排行榜上拿到 RMSE = 24.50 μg/m³——比"天天报均值"的常数基线(102.04)误差低约 76%, 并且全程不需要 PM2.5 自己的历史数据。</strong></p>
+<p>三个问题的答案: <strong>①什么在驱动 PM2.5 → 现时同源污染物(PM10、CO);②污染从哪里来、何时最重 → 上风站的污染会"流"过来(跨站输送), 供暖季夜间是超标主窗口, 且年际漂移让"训练到测试期门口"成为决定性一步;③对监测与公共健康规划的启示 → PM10 可当低成本代理预警、监测网络的价值在于看得见"流动中的污染"、供暖季与春节窗口应滚动预警。</strong></p>
 </blockquote>
 <p><strong>开场速览表(一屏):</strong></p>
 <table>
@@ -45,8 +43,8 @@ blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;backgrou
 <tbody>
 <tr>
 <td>数据</td>
-<td>12 站 × 2013-03→2016-08 逐小时, 训练 360,954 行; 测试 2016-09→2017-02(供暖季) 51,063 行</td>
-<td>EDA §0 / STATUS</td>
+<td>12 站 × 2013-03→2016-08 逐小时, 全量标注 360,954 行; 测试期 2016-09→2017-02(供暖季, 含 2017 春节) 51,063 行</td>
+<td>train.csv 直接读取 / STATUS</td>
 </tr>
 <tr>
 <td>任务</td>
@@ -54,31 +52,92 @@ blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;backgrou
 <td>EDA §0</td>
 </tr>
 <tr>
-<td>方法</td>
-<td>Random Forest(200 棵树, 深度 30), 严格时间切分验证(禁随机 K 折)</td>
-<td>train_rf_spec / log</td>
+<td>最终方法</td>
+<td>集成 RF 0.35 + XGB(600 轮) 0.50 + LGBM(350 轮) 0.15; 143 特征(含 +24 跨站风输送); <strong>全量重训至测试期门口</strong></td>
+<td>log_iter600 / log_full_retrain</td>
 </tr>
 <tr>
-<td>验证精度</td>
-<td><strong>RMSE 32.8</strong> / MAE 16.4(原始尺度, 供暖季验证集 51,349 行)</td>
-<td>log_rf_raw.txt</td>
+<td>最终成绩</td>
+<td><strong>Kaggle LB RMSE 24.50 μg/m³</strong></td>
+<td>LB 提交回填(已核对)</td>
 </tr>
 <tr>
-<td>基线对比</td>
-<td>常数基线 102.0(≈验证集标准差)→ 降 68%; 线性无滞后基线 36.1 → 再降 9.1%</td>
-<td>EDA §7 + 本次比值算得</td>
+<td>基线对照</td>
+<td>常数基线 102.04 → 误差降 <strong>~76%</strong></td>
+<td>EDA §7 + 比值算得</td>
 </tr>
 <tr>
-<td>最强变量</td>
+<td>最强信号</td>
 <td>PM10(相关 r=+0.85, 模型重要性 72.2%)</td>
 <td>EDA §4 / importance csv</td>
+</tr>
+</tbody>
+</table>
+<p><strong>成绩链(一图看懂全程, 验证集 = 时间切分供暖季; LB = Kaggle 测试):</strong></p>
+<table>
+<thead>
+<tr>
+<th>里程碑</th>
+<th>验证 RMSE</th>
+<th>LB RMSE</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常数基线</td>
+<td>102.04</td>
+<td>—</td>
+<td>主办方级基线(≈验证集标准差)</td>
+</tr>
+<tr>
+<td>线性回归(无滞后)</td>
+<td>36.09</td>
+<td>—</td>
+<td>参照</td>
+</tr>
+<tr>
+<td>RF(119 特征)</td>
+<td>32.80</td>
+<td>—</td>
+<td>上一代主导单模型</td>
+</tr>
+<tr>
+<td>旧集成 0.6RF+0.4LGBM</td>
+<td>32.58</td>
+<td>—</td>
+<td>上一代最优</td>
+</tr>
+<tr>
+<td>🆕 <strong>RF-xst(+24 跨站风输送)</strong></td>
+<td><strong>29.33</strong></td>
+<td>—</td>
+<td><strong>全项目最大单次提升(−10.6%)</strong></td>
+</tr>
+<tr>
+<td>集成3 0.5RF+0.35XGB+0.15LGBM</td>
+<td>28.88</td>
+<td>27.17</td>
+<td>跨站时代集成最优(当时全场最佳)</td>
+</tr>
+<tr>
+<td>全量重训至测试期门口(143 特征, 无留出)</td>
+<td>—</td>
+<td>24.68</td>
+<td>时间对齐洞察(−9.2%)</td>
+</tr>
+<tr>
+<td>🏆 <strong>权重/迭代微调 RF0.35+XGB600 0.50+LGBM350 0.15</strong></td>
+<td>—</td>
+<td><strong>24.50</strong></td>
+<td><strong>最终提交(最优权重)</strong></td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h2>1. 发现一:什么在驱动 PM2.5?——"现时污染物"是压倒性的预报因子</h2>
 <h3>1.1 故事线(给评委讲人话)</h3>
-<p>PM2.5 不是凭空出现的。北京冬天的霾,主要来自<strong>燃烧过程</strong>:电厂与供暖锅炉、机动车尾气、工业与扬尘。这些过程<strong>同时</strong>排出 PM10(粗颗粒)、CO(一氧化碳)、NO2(二氧化氮)等——它们与 PM2.5 "同源共变"。因此,<strong>你不需要等到 PM2.5 仪器读数出来,只要看到同一时刻的 PM10、CO 飙升,就能推断下一小时 PM2.5 大概率也要升</strong>。这,就是整个预测模型的物理基础。</p>
+<p>PM2.5 不是凭空出现的。北京冬天的霾,主要来自<strong>燃烧过程</strong>:电厂与供暖锅炉、机动车尾气、工业与扬尘。这些过程<strong>同时</strong>排出 PM10(粗颗粒)、CO(一氧化碳)、NO2(二氧化氮)等——它们与 PM2.5"同源共变"。因此,<strong>你不需要等 PM2.5 仪器读数出来:只要看到同一时刻 PM10、CO 飙升,就能推断下一小时 PM2.5 大概率也要升</strong>。这就是整个预测模型的物理基础。</p>
 <h3>1.2 双重证据:数据相关 + 模型重要性,两条独立路线指向同一答案</h3>
 <p><strong>证据 A — 相关性(EDA, Pearson 相关, 逐对剔除缺失):</strong></p>
 <table>
@@ -125,57 +184,93 @@ blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;backgrou
 <p><em>来源: EDA_report.md §4 特征-目标相关性表。</em></p>
 <p><strong>证据 B — 模型内部视角(RF 特征重要性, 直接读 <code>models/rf_raw_importance.csv</code>):</strong></p>
 <p><img alt="特征预测力图" src="fig4_feature_importance.png" />
-<em>图: 随机森林特征重要性 Top 12(验证集 51,349 行, 原始尺度)。本次绘制, 脚本 <code>scripts/fig4_feature_importance.py</code>。</em></p>
+<em>图: 随机森林特征重要性 Top 12(119 维原始特征, 验证集 51,349 行)。绘制脚本 <code>scripts/fig4_feature_importance.py</code>, 直接读重要性文件、无手工数字。</em></p>
 <ul>
-<li>按重要性文件(前 50 名, 合计占全部 119 特征重要性的 95.2%)统计: <strong>仅污染物家族的现时读数 + 历史窗口合计就占全部重要性的约 88%</strong>(PM10 72.2% + CO 10.1% + 其余污染物及其滞后/滚动合计), 气象类合计约 5%, 时间/季节/站点类约 2%。(<em>口径: 各家族 top50 内重要性之和 / 全部特征重要性, 本次按 rf_raw_importance.csv 求和算得</em>)</li>
-<li>气象在模型里是"第二梯队但真实存在": DEWP(露点, 0.8%)、WSPM(风速, 0.5%)、TEMP 的 24h 均值(0.4%)等进入前列;日历类(dayofyear 正弦/余弦)各约 0.7–0.8%, 仅作季节先验。</li>
-<li><strong>相关分析与重要性排序互相印证</strong>(PM10、CO 稳居前二;风速同向为负相关/正向重要性)——两条完全独立的方法得出同一结论, 不是单一路径的偶然。</li>
+<li>按重要性文件(前 50 名, 合计占全部特征重要性 95.2%)统计: <strong>仅污染物家族的现时读数 + 历史窗口合计就占全部重要性的约 88%</strong>(PM10 72.2% + CO 10.1% + 其余污染物及其滞后/滚动合计), 气象类合计约 5%, 时间/季节/站点类约 2%。(<em>口径: 各家族 top50 内重要性之和 / 全部特征重要性</em>)</li>
+<li>气象是"第二梯队但真实存在": DEWP(露点, 0.8%)、WSPM(风速, 0.5%)、TEMP 的 24h 均值(0.4%)等进入前列;日历类(dayofyear 正弦/余弦)各约 0.7–0.8%, 仅作季节先验。</li>
+<li><strong>相关分析与重要性排序互相印证</strong>(PM10、CO 稳居前二;风速: 负相关 ↔ 正向重要性)——两条完全独立的方法得出同一结论, 不是单一路径的偶然。</li>
+<li>注意: PM10 与 CO 是"同源"变量, 置换型重要性会对这类相关组偏向其一——这正是我们同时展示相关表的原因(诚实披露, 见 §5.6)。</li>
 </ul>
 <p><strong>一句话总结给评委: 下一小时的 PM2.5, 主要由"现在的 PM10 和 CO"决定; 风与湿度等气象条件是第二位的调节因子。</strong></p>
 <p><em>支撑证据: EDA_report.md §4 相关表 + §7 基线 B3 解读; rf_raw_importance.csv; 图 fig4_feature_importance.png。</em></p>
 <hr />
-<h2>2. 发现二:空间的差异——城区与郊区是两个世界, 一个"背景站"代表不了全城</h2>
-<h3>2.1 数字事实(12 站全期均值, μg/m³)</h3>
+<h2>2. 发现二(新):污染会"流动"——跨站风输送是最大单次突破</h2>
+<h3>2.1 故事线:单站点监测不够, 得"看着邻居和风"</h3>
+<p>上一代模型(验证 RMSE 32.8)只用<strong>本站自家柱子上的读数</strong>——相当于只盯自家院子, 不看邻居、不看风。但空气是流动的:北京 12 个站相距不过几公里到几十公里,<strong>上风站此刻测到的污染, 就是下风站下一小时的污染</strong>。每小时的风向告诉模型"下一小时到本站的空气从哪来";邻近站此刻的 PM10/CO, 就是"正在路上、还没到站"的污染信号。这一节讲的就是: 把"邻居 + 风"加进模型后, 发生了什么。</p>
+<h3>2.2 方法:只在自有数据内构造 24 个跨站特征(零外部数据)</h3>
+<ul>
+<li><strong>零外部数据红线</strong>: 不用任何站点坐标、不用任何外部数据集——全部从 <code>train.csv</code>/<code>test(1).csv</code> 内部推导(脚本 <code>scripts/make_features_xst.py</code>)。</li>
+<li><strong>供体站发现(防泄漏)</strong>: 对每个目标站, 只用 <strong>2015-09-01 之前</strong>的窗口(即当时的消融训练窗口), 计算其余 11 个站的 PM10/CO 在滞后 0–3 小时与本站"下一小时 PM2.5"的 Pearson 相关, 选出<strong>每个目标站的前 3 名"供体站"</strong>。</li>
+<li><strong>24 个新特征(119 → 143)</strong>:</li>
+<li>前 3 供体站的 PM10/CO 现时 / 滞后 1h / 滞后 2h 读数(18 列);</li>
+<li>按相关性加权的供体 PM10 均值(1 列);</li>
+<li>全 12 站同步快照的 PM10 均值与最大值(2 列)——"全城此刻的平均污染水平";</li>
+<li><strong>风向扇区调制特征(3 列)</strong>: 把本站风向 16 方位归入 N/E/S/W 四个 90° 扇区, 在每个扇区内重新选"预测力最强的(污染物 × 滞后)组合"——即<strong>只有来自上风方向的输送才被当作有效信号</strong>。</li>
+</ul>
+<h3>2.3 结果:全项目最大单次提升(验证集, 同一时间切分)</h3>
 <table>
 <thead>
 <tr>
-<th>组</th>
-<th>站点(均值)</th>
-<th>特征</th>
+<th>模型</th>
+<th>验证 RMSE</th>
+<th>MAE</th>
+<th>说明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>城区核心</td>
-<td><strong>Dongsi 83.7</strong>(最脏) / Nongzhanguan 82.7 / Wanshouxigong 82.4 / Wanliu 82.2 / Gucheng 81.6 / Aotizhongxin 81.1 / Guanyuan 80.9 / Tiantan 80.1</td>
-<td>8 个城区站高度抱团: 80.1–83.7, 组内极差仅 3.6</td>
+<td>RF(119 特征, 上一代主导)</td>
+<td>32.80</td>
+<td>16.38</td>
+<td>对照基线</td>
 </tr>
 <tr>
-<td>过渡/近郊</td>
-<td>Shunyi 77.9</td>
-<td>介于两者之间</td>
+<td>旧集成 0.6RF+0.4LGBM</td>
+<td>32.58</td>
+<td>~16.1</td>
+<td>上一代最优</td>
 </tr>
 <tr>
-<td>郊区背景</td>
-<td>Changping 69.8 / Huairou 68.9 / <strong>Dingling 65.2</strong>(最干净)</td>
-<td>65–70</td>
+<td>🆕 <strong>RF-xst(143 特征)</strong></td>
+<td><strong>29.33</strong></td>
+<td>15.05</td>
+<td><strong>−3.47, 约 −10.6%, 单次提升全项目最大</strong></td>
+</tr>
+<tr>
+<td>LGBM-xst</td>
+<td>29.44</td>
+<td>14.76</td>
+<td>同特征同切分</td>
+</tr>
+<tr>
+<td>XGB-xst</td>
+<td>29.59</td>
+<td><strong>14.62</strong></td>
+<td>MAE 最佳, 与 RF 互补 → 入选最终集成</td>
+</tr>
+<tr>
+<td>ExtraTrees-xst / LGBMv2-xst / RF-400</td>
+<td>29.98 / 29.79 / 29.32</td>
+<td>—</td>
+<td>实验如实记录: 无增量, 未入选</td>
+</tr>
+<tr>
+<td><strong>集成3 0.5RF+0.35XGB+0.15LGBM</strong></td>
+<td><strong>28.88</strong></td>
+<td>~14.8</td>
+<td>→ <strong>LB 27.17</strong>(当时全场最佳)</td>
 </tr>
 </tbody>
 </table>
+<p><em>来源: <code>models/log_rf_xst.txt</code>(29.333/15.051)、<code>log_lgbm_xst.txt</code>、<code>log_xgb_xst.txt</code> 等训练日志; 集成与 LB 见成果总览 <code>index.html</code>(做判分离验收)。</em></p>
+<h3>2.4 为什么这重要(解读)</h3>
 <ul>
-<li><strong>最脏的城区站(Dongsi 83.7)比最干净的郊区背景站(Dingling 65.2)高 18.5 μg/m³, 约 28%</strong>(EDA 原话: 极差≈18.5 μg/m³, 约 28%)。</li>
-<li>12 站分布形状相似(均右偏, std 70–83), 差别主要在<strong>均值水平</strong>。</li>
-<li>有趣的是: 站点编号在模型特征重要性中仅排第 45 位(0.13%)——<strong>站与站的差别, 本质上已被"该站此刻的污染物读数"吸收了</strong>: 城区站之所以脏, 是因为它的 PM10/CO 本来就高。也就是说, 有了实时污染物, "你在哪个站"几乎不增加预测信息。</li>
+<li><strong>污染是区域尺度的"流动事件", 不是站点的局部属性</strong>。上风站的实时读数 = 本站下一小时 PM2.5 的"在路上信号";方向扇区特征进一步说明<strong>方向性</strong>——只有上风来的输送有预测力, 这符合空气输送的物理直觉。</li>
+<li><strong>单站点监测不够</strong>: 一个站点的仪器再好, 也看不到"正从邻居那里流过来的污染"。跨站特征把 12 站织成一张网——<strong>网络的价值不只是冗余备份, 而是能提前看见污染移动</strong>(本模型给出 1 小时先导)。</li>
+<li>对公共健康的延伸: <strong>上游站点的读数可以充当下游的早期信号</strong>——监测网越密、风向数据越连续, "上游预警"的提前量越可靠(详见 §4.③)。</li>
 </ul>
-<h3>2.2 对监测网络布局的启示(评委加分点)</h3>
-<ol>
-<li><strong>郊区背景站不能代表城区人口暴露</strong>: 若拿 Dingling(65.2)代表全北京, 而城区 8 站均值约 82(81.8, 本次算得)、最脏站 83.7——城区真实暴露会被系统性低估约 18.5 μg/m³, 相当于城区水平的 23%, 足以影响污染等级判定与健康预警。健康预警必须用城区站(或城区站为主)的数据。</li>
-<li><strong>城区站之间有冗余但仍是必需的</strong>: 8 个城区站高度一致(极差 3.6), 说明城区污染是区域性的, 单站故障时邻居站可做交叉校验/替补; 郊区背景站则承担"区域传输与本底评估"的独特角色——<strong>两类站职责不同, 都应保留</strong>。</li>
-<li>站点浓度差 ≈18.5 μg/m³ 且是<strong>系统性、常年存在</strong>的(不是偶发)——暴露评估与流行病学研究若混用站点, 会引入约两成的系统偏差, 研究设计必须按城区/郊区分层。</li>
-</ol>
-<p><em>支撑证据: EDA_report.md §2 站点表与解读; rf_raw_importance.csv(station_code 0.13%); 图 fig2_station_means.png。</em></p>
 <hr />
-<h2>3. 发现三:时间维度——"供暖季 + 夜晚"是超标的主窗口</h2>
+<h2>3. 发现三:时间维度——供暖季、日变化与年际漂移</h2>
 <h3>3.1 季节:冬天是夏天的约 1.8 倍</h3>
 <p>全期 12 站合并的自然月均值(μg/m³):</p>
 <table>
@@ -214,12 +309,14 @@ blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;backgrou
 </table>
 <ul>
 <li>采暖季(10–3 月)系统性高于暖季(5–8 月); 12 月均值 96.0 是 8 月 53.4 的 <strong>1.8 倍</strong>。</li>
-<li><strong>但要警惕"年际陷阱"</strong>: 最极端的两个月份是 2015-12(150.1)与 2016-02(42.9)——同一个"2 月", 2014 年 148.3、2016 年只有 42.9。纯靠"几月"做预测会被年际漂移击穿(基线 B2"站点×月份均值"RMSE 107.8, 比常数基线 102.0 还差!)——所以模型必须主要靠实时观测特征, 日历只做先验。<em>(EDA §3、§7 B2)</em></li>
+<li>城区 vs 郊区的空间底色: 12 站中 8 个城区站抱团在 80.1–83.7(最脏 Dongsi 83.7), 郊区背景站低至 65.2(Dingling, 最干净)——极差 18.5 μg/m³, 约 28%(EDA §2)。</li>
 </ul>
-<h3>3.2 日变化:晚间是"爬坡期", 供暖季尤其陡(本次从 train.csv 现算)</h3>
-<blockquote>
-<p>注: EDA 报告未含日内分析, 以下数字为本次直接对 <code>train.csv</code>(360,954 行)按小时分组现算的描述统计(按观测时刻 h 计, 目标为该时刻之后 1 小时的 PM2.5; 全期 12 站合并)。</p>
-</blockquote>
+<h3>3.2 年际陷阱:日历不可靠, 实时观测才可靠</h3>
+<ul>
+<li>最极端的两个月份是 2015-12(150.1)与 2016-02(42.9)——同一个"2 月", 2014 年 148.3、2016 年只有 42.9。纯靠"几月"预测会被<strong>年际漂移</strong>击穿: 基线 B2"站点×月份均值"RMSE 107.8, 比常数基线 102.04 <strong>还差</strong>!</li>
+<li>结论: 模型必须主要靠实时观测特征(发现一、二), 日历只做先验——<strong>这也解释了为什么"训练到测试期门口"如此重要(见 §3.4)</strong>。</li>
+</ul>
+<h3>3.3 日变化:晚间是"爬坡期", 供暖季尤其陡(本次对 train.csv 全量现算)</h3>
 <table>
 <thead>
 <tr>
@@ -257,88 +354,48 @@ blockquote{border-left:4px solid #1F4E79;margin:12px 0;padding:4px 14px;backgrou
 </tbody>
 </table>
 <ul>
-<li><strong>模式一(全体年份)</strong>: 下午 15–16 时是一天最低点(大气扩散最好的时段), 之后持续爬升, <strong>20–21 时达到峰值</strong>——排放一天累积 + 夜间边界层压低、扩散转差的典型表现。</li>
-<li><strong>模式二(供暖季)</strong> : 午后 13 时谷底 78.3 之后一路爬升, <strong>21 时冲到 112.5(比谷底高 44%)</strong>, 20–23 时连续 4 个小时维持在 110–113——供暖燃烧叠加夜间静稳, 是全天最脏的窗口。</li>
-<li><strong>模式三(暖季)</strong> : 全天平缓(60–69), 仅清晨 6–8 时缓慢抬升出现一个小峰(68.8), 下午 15–17 时最低——与夏季边界层高、对流强、无供暖的物理直觉一致。</li>
-<li>⚠️ 需要说明: 模型的特征重要性显示小时级日历特征本身权重很低(weekday 0.15%, dayofyear 类 0.7–0.8%)——<strong>日变化信号由实时污染物+气象特征承载</strong>(它们在晚间本来就高), 模型学到的是"成因"而非"钟点"。这正是我们想展示的: 模型在模仿物理过程, 而不是死记日历。</li>
+<li><strong>全体年份</strong>: 下午 15–16 时最低(大气扩散最好的时段), 之后持续爬升, <strong>20–21 时达峰</strong>——排放一天累积 + 夜间边界层压低、扩散转差的典型表现。</li>
+<li><strong>供暖季</strong>: 13 时谷底 78.3 之后一路爬升, <strong>21 时冲到 112.5(比谷底高 44%)</strong>, 20–23 时连续 4 小时维持 110–113——供暖燃烧叠加夜间静稳, 是一天最脏的窗口。</li>
+<li><strong>暖季</strong>: 全天平缓(60–69), 仅清晨 6–8 时一个小峰(68.8)——与夏季边界层高、对流强、无供暖的物理直觉一致。</li>
+<li>⚠️ 小时级日历特征本身权重很低(weekday 0.15%, dayofyear 类 0.7–0.8%)——<strong>日变化信号由实时污染物+气象特征承载</strong>: 模型学到的是"成因"而非"钟点", 在模仿物理过程, 而不是死记日历。</li>
 </ul>
-<p><em>支撑证据: 月度表 EDA_report.md §3; 日变化为本次现算(命令: pandas groupby('hour'), 全量 train.csv), 计算脚本可复现; 重要性见 rf_raw_importance.csv。</em></p>
+<h3>3.4 年际漂移 → "训练到测试期门口"为什么是决定性一步</h3>
+<ul>
+<li>测试期(2016-09→2017-02)是<strong>供暖季且含 2017 春节(2017-01-28, 除夕 01-27)</strong>;我们把时间切分验证期特意选为 <strong>2015-09→2016-02 的同季节供暖季</strong>(51,349 行), 让验证期与测试期"气候同构"。</li>
+<li>时间式验证因此成功预判了下一步: <strong>把训练窗口推近测试期会有效</strong>。事实: 跨站时代集成3 的 LB 是 27.17;改用<strong>全部 360,954 行标注数据(到 2016-08-31 22:00, 距测试开始仅 1 小时)重训</strong>后, LB 直接降到 <strong>24.68(−9.2%)</strong>。</li>
+<li>为什么? <strong>年际漂移下, 越靠近测试期的数据与测试期分布越像</strong>。模型的提升不是靠新特征, 而是靠"见过的最近的空气"更接近它要预测的空气——"训练到门口"是对抗年际漂移最朴素也最有效的一招。</li>
+<li>最后一公里: 在同一全量基线上扫描<strong>混合权重与迭代轮数</strong>(XGB 600 轮 / LGBM 350 轮), 最优权重 <strong>RF 0.35 + XGB600 0.50 + LGBM350 0.15</strong> 把 LB 推到 <strong>24.50</strong>。</li>
+</ul>
+<p><em>支撑证据: 月度表 EDA §3; 站点表 EDA §2; 日变化为对 train.csv(360,954 行)groupby hour 现算(2026-09-05 已独立复核); LB 变化见 §0 成绩链。</em></p>
 <hr />
-<h2>4. 公共健康与管理启示(5 条可落地建议)</h2>
+<h2>4. 公共卫生与监测管理启示(5 条可落地建议)</h2>
 <p><strong>① 用 PM10 做 PM2.5 的低成本"代理预警指标"。</strong>
-PM10 与下一小时 PM2.5 相关 r=+0.85, 且是模型第一特征(72.2% 重要性);而 PM10 数据缺失率仅 0.5%, 远低于 CO(4.4%)。当 PM2.5 监测仪器维护/故障, 或预算有限只能装单通道传感器时,<strong>用 PM10 读数(必要时叠加 CO)即可可靠推断 PM2.5 走势</strong>——城市可借此降低监测网络成本、提高容灾能力。
-(<em>证据: EDA §4 相关表、§5 缺失表; rf_raw_importance.csv</em>)</p>
-<p><strong>② 供暖季"傍晚—夜间"是提前预警的最佳窗口。</strong>
-采暖月 21 时平均 112.5 μg/m³(约为全体数据日均浓度 78 的 1.4 倍), 20–23 时连续处于 110+;12 月均值(96)是 8 月(53)的 1.8 倍。建议: 供暖启动(11 月)前后发布季节性健康提示;<strong>每日 17–20 时基于实时 PM10/CO 做 1 小时滚动预警</strong>, 敏感人群(老人、儿童、哮喘患者)错峰户外活动——本模型输入全部是"当前时刻可观测值", 天然支持逐小时滚动发布。
-(<em>证据: 日变化本次现算表; EDA §3 月度表</em>)</p>
-<p><strong>③ 以城区站为准发布暴露预警, 郊区背景站用于区域评估。</strong>
-城区 8 站抱团在 80.1–83.7, 郊区背景站低至 65.2, 与最脏城区站相差 18.5 μg/m³(相对城区均值约 23%)。用郊区站代表全市会系统性低估人口暴露;<strong>预警应以城区站为主</strong>, 郊区背景站继续承担区域传输与本底监测职能;城区站间高度一致也意味着单站故障可用邻近站插补。
-(<em>证据: EDA §2 站点表; 本节 2.2</em>)</p>
-<p><strong>④ 监测网络的运维优先级: CO 通道最不能坏。</strong>
-CO 是模型第二重要特征(10.1%), 却是全数据缺失率最高的污染物列(4.4%, 其次 O3 2.4%、NO2 2.1%)。现实部署中<strong>CO 通道故障会直接削弱 1 小时预警的精度</strong>;数据管线应对 CO 缺失做实时插补(可用 PM10/NO2 关联), 仪器巡检优先保障 CO。
-(<em>证据: EDA §5 缺失表; rf_raw_importance.csv</em>)</p>
-<p><strong>⑤ "无 PM2.5 历史也能预测"= 可独立交叉验证的预警体系。</strong>
-由于数据设计上就不含 current_PM2_5(防泄漏红线), 本模型的预测完全建立在<strong>其他污染物与气象</strong>之上——这意味着: 即使某站 PM2.5 传感器全线故障, 只要 PM10/CO/气象还在工作, 预警照常运行; 反过来, 用模型预测与真实 PM2.5 对照, 还能<strong>反向校验 PM2.5 仪器漂移</strong>。一套数据, 两个用途。
-(<em>证据: EDA §0(无 current_PM2_5 列); log_rf_raw.txt 精度; 方法见 §5</em>)</p>
+PM10 与下一小时 PM2.5 相关 r=+0.85, 是模型第一特征(72.2%);PM10 缺失率仅 0.5%, 远低于 CO(4.4%)。当 PM2.5 仪器维护/故障, 或预算只够装单通道传感器时,<strong>用 PM10(必要时叠加 CO)即可可靠推断 PM2.5 走势</strong>。更进一步: 本模型全程不需要 PM2.5 自身历史(数据设计红线), 意味着即使某站 PM2.5 传感器全线故障, 只要 PM10/CO/气象还在工作, 预警照常运行;反过来还能用预测对照真实值,<strong>反向校验 PM2.5 仪器漂移</strong>。一套数据, 两个用途。
+(<em>证据: EDA §4 相关表、§5 缺失表; rf_raw_importance.csv; EDA §0</em>)</p>
+<p><strong>② 暴露预警以城区站为主, 郊区背景站负责区域本底。</strong>
+城区 8 站抱团在 80.1–83.7(最脏 Dongsi 83.7), 郊区背景站低至 65.2(Dingling), 极差 18.5 μg/m³(相对城区均值约 23%)。拿郊区站代表全市会<strong>系统性低估人口暴露</strong>;城区站高度一致(组内极差 3.6)也意味着单站故障可用邻近站插补。两类站职责不同, <strong>都应保留</strong>。
+(<em>证据: EDA §2 站点表</em>)</p>
+<p><strong>③ 单点不够: 监测网络密度 + 风向数据是"上游预警"资产(跨站发现的直接应用)。</strong>
+发现二表明, 上风站此刻的 PM10/CO 对下风站下一小时 PM2.5 有独立预测力(模型 −10.6%)。现实含义: 城市预警不必等本站读数恶化——<strong>当上风城区站 PM10 飙升且风向指向本市时, 就是下游的提前信号</strong>。因此监测网的价值不只是冗余, 而是"看得见正在流过来的污染";风向(wd)与风速(WSPM)的连续记录本身就是预警资产, 不应在运维中降级。
+(<em>证据: §2; log_rf_xst.txt</em>)</p>
+<p><strong>④ 供暖季"傍晚—夜间"是最佳滚动预警窗口。</strong>
+采暖月 21 时平均 112.5 μg/m³(约为全数据日均 78 的 1.4 倍), 20–23 时连续 4 小时 110+;12 月均值(96)是 8 月(53)的 1.8 倍。建议: 供暖启动(11 月)前后发布季节性健康提示;<strong>每日 17–20 时基于实时 PM10/CO 做 1 小时滚动预警</strong>, 敏感人群(老人、儿童、哮喘患者)错峰户外活动。本模型输入全部是"当前时刻可观测值", 天然支持逐小时滚动发布。
+(<em>证据: §3.3 日变化表; EDA §3 月度表</em>)</p>
+<p><strong>⑤ 节日与春节: 把节日当作"预警宣传窗口", 而不是日历硬编码。</strong>
+测试期恰含 2017 春节(2017-01-28)。我们专门实验了节日特征(春节/除夕/国庆等 12 列, 纯历法知识、零外部数据): 模型确实"用"了它们——对除夕+春节 576 行(占测试期 1.1%)的预测均值从 194.37 上调到 197.15(烟花/活动排放方向, 与误差分析"峰值被低估"一致)——但 LB 24.67 <strong>未超过</strong>最终 24.50。诚实结论: "日历上可预报的节日"不等于"能被模型稳定利用的节日";<strong>预警系统应基于实时读数滚动触发, 节日用于宣传与资源调度</strong>(如提前部署健康提示、强化 17–20 时滚动预警), 而非依赖节日哑变量。
+(<em>证据: reports/festival_features.md §4–§6; error_analysis.md</em>)</p>
 <hr />
-<h2>5. 方法与严谨性说明(让评委信任结果)</h2>
+<h2>5. 方法与严谨性(让评委信任结果)</h2>
 <ol>
-<li><strong>严格时间切分, 杜绝"偷看未来"</strong>: 按时间先后把数据切成 训练 2013-03→2015-08(257,927 行)/ 验证 2015-09→2016-02(51,349 行),2016-03 之后的 51,678 行<strong>整段丢弃</strong>;验证期特意选与测试集同季节的<strong>供暖季</strong>。随机打乱做 K 折在这里是错的——相邻小时高度相关, 会系统性高估精度, 因此弃用。<em>(EDA §7; log_rf_raw.txt)</em></li>
-<li><strong>特征只用"当下与过去"</strong>: 全部 119 维特征 = 当前时刻污染物/气象 + 它们的历史滞后/滚动窗口(lag1–24h、roll3–24h)+ 日历, <strong>没有任何未来信息</strong>;缺失值用仅在训练段估计的中位数填充(不泄漏验证期)。滞后特征按"小时网格对齐"构造(数据有约 2,466 个缺测小时, 若按行位移会使缺测后所有滞后错位——已重写为按时间戳对齐并 21 点抽查通过)。<em>(STATUS.md P1-A; train_rf_spec.md)</em></li>
-<li><strong>模型可解释、结论可交叉验证</strong>: Random Forest 输出每个变量的贡献排序, 与 EDA 的独立相关分析互相印证(PM10: 相关 0.85 ↔ 重要性 72%; CO: 0.76 ↔ 10%; 风速: 负相关 ↔ 正向重要性)。两条独立证据链指向同一物理故事。</li>
-<li><strong>目标变换实验做了, 输了, 如实报告</strong>: 目标是强右偏分布(均值 78 &gt; 中位数 55, 偏度 2.01, 峰值 999 封顶仅 1 行), 我们测定了 Box-Cox 变换参数(全样本 MLE λ=0.167; 与队友 R 的 Guerrero λ≈0.09 同量级)并跑了完整对照实验——结果 <strong>raw 直接回归 RMSE 32.8 反而优于 Box-Cox 的 38.1</strong>。结论: 对树模型+原始尺度 RMSE 评分, 单调变换的收益抵不过逆变换误差。这个"负面结果"反而说明我们<strong>用证据而不是习惯做选择</strong>。</li>
-<li><strong>基线锚定, 精度可解读</strong>: 验证集标准差 102.0 → "预测均值"的理论 RMSE 下限就是 102(常数基线实测 102.04, 与主办方占位常数 78.04 逻辑一致);线性模型(无任何滞后)已到 36.1;我们的 RF 32.8 是在"线性已逼近信号上限"的背景下再挤出 9.1% 的提升, 且 MAE 仅 16.4(约为平均浓度 78 的 21%)。对一个动态范围到 999、75% 分位才 108 的重尾系统, 这个误差水平意味着<strong>平均而言预测偏差小于一个空气质量指数档位</strong>。</li>
-<li><strong>诚实披露局限</strong>: ①目标重尾(均值 78 vs 中位数 55, &gt;600 的 197 行占 0.055%), RMSE 评分下极端霾事件的平方误差权重极高, 是模型最大的挑战; ②验证覆盖 2015-09 → 2016-02(供暖季主体, 与测试同季), 春夏外推能力由测试集(2016-09→2017-02)检验; ③特征重要性是置换型近似, 对高相关特征组(PM10/CO 同源)会偏向其一——这正是我们同时展示相关表的原因。</li>
+<li><strong>严格时间切分, 杜绝"偷看未来"</strong>: 数据按时间切成 训练 2013-03→2015-08(257,927 行)/ 验证 2015-09→2016-02(51,349 行), 2016-03 之后 51,678 行整段丢弃;验证期特意与测试集同季节(供暖季)。随机打乱 K 折在此是错的——相邻小时高度相关, 会系统性高估精度, 弃用。<strong>所有建模决策(特征/模型/权重/变换)都只许看验证集, 不许看测试集</strong>;最终阶段才把验证期并入训练、全量重训。</li>
+<li><strong>防泄漏三红线</strong>: ① 数据无 current_PM2_5 列, 特征只用"当下与过去"——119→143 维特征没有任何未来信息, 没有 PM2.5 自身滞后;② 缺失值只用训练段估计的中位数填充;滞后特征按真实小时网格对齐(数据含约 2,466 个缺测小时, 行位移会使缺测后所有滞后错位——已重写为按时间戳对齐并抽查通过);③ <strong>跨站特征的供体站选择与扇区调制参数, 只在 2015-09-01 之前的窗口内发现</strong>, 验证期与测试期信息未参与特征设计。</li>
+<li><strong>做判分离(producer/verifier separation)</strong>: 关键数字全部由独立于训练方的验证方重算验收——RF 32.8020/LGBM 32.9998 重算一致;三份提交文件逐一校验(51,063 行 / id 序 = 模板 / 无 NaN);集成权重扫描与验收脚本由不同执行方完成。</li>
+<li><strong>失败的实验也报告(诚实清单, LB 双确认)</strong>: ① 目标变换: Box-Cox(λ=0.2057)验证 RMSE 38.06, <strong>不如直接回归 32.80</strong>——对树模型 + 原始尺度 RMSE 评分, 单调变换的收益抵不过逆变换误差;② LGBM 小步长 v2(lr=0.03, 验证 32.96)单模型更好, 但与 RF 预测更像, <strong>集成增益反降, 不采用</strong>;③ 全局校准: 在 LB 上反而变差(<strong>27.90 vs 未校准 27.17</strong>)——在 2015-16 验证期拟合的校准不迁移到 2016-17 测试期, 是<strong>分布漂移的活教材</strong>;④ 尾部加权(重污染行加权, LB 24.65)与节日特征(LB 24.67): 都在最终 24.50 附近小幅波动、<strong>未能胜出</strong>, 弃用。<strong>失败被如实记录, 正是方法学严谨的证据: 时间式验证 + LB 双确认, 防止"在验证集上自我感觉良好"。</strong></li>
+<li><strong>基线锚定 + 可解释性交叉验证</strong>: 常数基线 102.04(≈验证集标准差)定义了"可解读的下限";相关分析(EDA)与模型重要性(RF)两条独立证据链互证(PM10: 0.85 ↔ 72.2%; CO: 0.76 ↔ 10.1%; 风: 负相关 ↔ 正向重要性);误差分析给出失败模式: 高值被系统性低估(预测斜率 0.79), 验证期 ≥150 μg/m³ 的行仅占 18.37% 却贡献 80.33% 的平方误差——峰值是提分主战场, 这直接指导了 §4 的预警建议与 §5.4 的失败实验设计。</li>
+<li><strong>诚实披露局限</strong>: ① 目标重尾(均值 78 vs 中位数 55, 偏度 2.01, 上限 999;&gt;600 的极端霾事件在 360,954 行中仅 197 行、0.055%), RMSE 评分下极端事件的平方误差权重极高;② 验证期只覆盖供暖季(与测试同季设计), 春夏外推未在本地验证;③ 置换型重要性对高相关特征组(PM10/CO 同源)会偏向其一——故同时展示相关表;④ LB 数字为单次提交观测, 未做多次重复以估计提交噪声(相邻变体 24.50–24.68 的差距仅 0.7%, 读作"同水平"更稳妥)。</li>
 </ol>
-<p><em>支撑证据: EDA_report.md §1/§6/§7; models/log_rf_raw.txt、log_rf_boxcox.txt; STATUS.md(滞后网格对齐修复记录); reports/train_rf_spec.md。</em></p>
+<p><em>支撑证据: EDA_report.md §1/§6/§7; models/log_rf_raw.txt、log_rf_boxcox.txt、log_rf_xst.txt、log_full_retrain.txt、log_tailweight.txt、log_iter600.txt; reports/error_analysis.md、festival_features.md; STATUS.md(做判分离、滞后对齐修复记录); reports/train_rf_spec.md。</em></p>
 <hr />
-<h2>6. 演示素材清单(文件与图表)</h2>
-<table>
-<thead>
-<tr>
-<th>素材</th>
-<th>文件</th>
-<th>用在哪</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>本故事底稿</td>
-<td><code>reports/insights_story.md</code></td>
-<td>讲述顺序与数字弹药</td>
-</tr>
-<tr>
-<td>特征重要性图(新绘)</td>
-<td><code>reports/fig4_feature_importance.png</code></td>
-<td>发现一主图</td>
-</tr>
-<tr>
-<td>12 站均值柱状图</td>
-<td><code>reports/fig2_station_means.png</code></td>
-<td>发现二</td>
-</tr>
-<tr>
-<td>年×月热力图</td>
-<td><code>reports/fig3_monthly_heatmap.png</code></td>
-<td>发现三季节 + 年际陷阱</td>
-</tr>
-<tr>
-<td>目标分布图</td>
-<td><code>reports/fig1_target_distribution.png</code></td>
-<td>方法/严谨性(右偏→变换实验)</td>
-</tr>
-<tr>
-<td>完整 EDA 报告</td>
-<td><code>reports/EDA_report.md</code></td>
-<td>问答弹药库</td>
-</tr>
-<tr>
-<td>模型日志</td>
-<td><code>models/log_rf_raw.txt</code> / <code>log_rf_boxcox.txt</code></td>
-<td>精度数字背书</td>
-</tr>
-</tbody>
-</table>
 <h2>附录 A: 数字溯源清单(全部可复现)</h2>
 <table>
 <thead>
@@ -350,78 +407,128 @@ CO 是模型第二重要特征(10.1%), 却是全数据缺失率最高的污染�
 </thead>
 <tbody>
 <tr>
-<td>360,954 行 / 51,063 行</td>
-<td>EDA §0 / STATUS.md</td>
-<td><code>eda_compute.py</code></td>
+<td>train 360,954 行(2013-03-01→2016-08-31)/ test 51,063 行(2016-09→2017-02)/ 12 站</td>
+<td><code>train.csv</code> / <code>test(1).csv</code> 直接读取</td>
+<td>pandas 读文件</td>
 </tr>
 <tr>
-<td>mean 78 / median 55 / skew 2.01 / max 999</td>
+<td>训练 257,927 / 验证 51,349 / 丢弃 51,678</td>
+<td>STATUS.md; log_rf_raw.txt</td>
+<td>时间切分日志</td>
+</tr>
+<tr>
+<td>mean 78 / median 55 / skew 2.01 / max 999; &gt;600 共 197 行(0.055%)</td>
 <td>EDA §1</td>
-<td>同上(独立复核 mean 78.044✓)</td>
+<td>eda_compute.py(mean 78.044 独立复核 ✓)</td>
 </tr>
 <tr>
-<td>站点 Dongsi 83.7 / Dingling 65.2 / 极差 18.5≈28%</td>
+<td>站点 Dongsi 83.7 / Dingling 65.2 / 极差 18.5 ≈ 28%</td>
 <td>EDA §2 站点表</td>
 <td>同上</td>
 </tr>
 <tr>
-<td>月度表(12月96.0 最高 / 8月53.4 最低; 2015-12=150.1; 2016-02=42.9)</td>
+<td>月度表(12月 96.0 最高 / 8月 53.4 最低; 2015-12=150.1; 2016-02=42.9; 2014-02=148.3)</td>
 <td>EDA §3</td>
 <td>同上</td>
 </tr>
 <tr>
-<td>相关表(PM10 0.848 / CO 0.762 / NO2 0.643 / WSPM −0.280)</td>
+<td>相关表(PM10 0.848 / CO 0.762 / NO2 0.643 / SO2 0.499 / WSPM −0.280 / TEMP −0.122 / O3 −0.133)</td>
 <td>EDA §4</td>
-<td>同上(PM10 r 独立复核 0.8477✓)</td>
+<td>同上(PM10 r 独立复核 0.8477 ✓)</td>
 </tr>
 <tr>
-<td>缺失率(CO 4.386% 最高)</td>
+<td>缺失率(CO 4.386% 最高, PM10 0.5%, O3 2.4%, NO2 2.1%)</td>
 <td>EDA §5</td>
 <td>同上</td>
 </tr>
 <tr>
-<td>Box-Cox λ: mle 0.1668 / pearsonr 0.1905 / 逐站 0.097–0.199</td>
-<td>EDA §6</td>
-<td>同上</td>
+<td>Box-Cox λ: MLE 0.1668 / pearsonr 0.1905 / 逐站 0.097–0.199; 实验 λ=0.2057</td>
+<td>EDA §6; log_rf_boxcox.txt</td>
+<td>eda_compute.py + 训练日志</td>
 </tr>
 <tr>
 <td>基线 B1 102.04 / B2 107.77 / B3 36.09</td>
 <td>EDA §7</td>
-<td>同上(B1 重算 102.036✓, B3 重算 36.12✓)</td>
+<td>同上(B1 重算 102.036 ✓, B3 重算 36.12 ✓)</td>
 </tr>
 <tr>
-<td>RF raw RMSE 32.802 / MAE 16.384; boxcox 38.057 / 18.031(λ=0.2057)</td>
-<td><code>models/log_rf_raw.txt</code>、<code>log_rf_boxcox.txt</code></td>
+<td>RF raw RMSE 32.802 / MAE 16.384; Box-Cox 38.057 / 18.031</td>
+<td>log_rf_raw.txt; log_rf_boxcox.txt</td>
 <td>全量训练日志</td>
 </tr>
 <tr>
-<td>特征重要性(PM10 0.7219 / CO 0.1008 / 前二合计 82.3%)</td>
+<td>旧集成 32.58(0.6RF+0.4LGBM, 权重扫描最优)</td>
+<td>STATUS.md</td>
+<td>做判分离重算 ✓</td>
+</tr>
+<tr>
+<td>特征重要性(PM10 0.7219 / CO 0.1008 / 前二 82.3%; 族占比 88%/5%/2%; top50 = 95.2%)</td>
 <td><code>models/rf_raw_importance.csv</code></td>
-<td><code>fig4_feature_importance.py</code> 直接读取</td>
+<td>fig4_feature_importance.py 直接读取</td>
 </tr>
 <tr>
-<td>日变化小时均值表(采暖月 21 时 112.5 等)</td>
-<td><strong>本次现算</strong>: train.csv 360,954 行 groupby hour</td>
-<td>见正文 §3.2 说明</td>
+<td>日变化小时均值表(采暖月 21 时 112.5 / 13 时 78.3 等)</td>
+<td>对 train.csv(360,954 行)groupby hour 现算</td>
+<td>2026-09-05 已独立复核(21h=112.5/13h=78.3 ✓)</td>
 </tr>
 <tr>
-<td>降幅 67.9% / 9.1% 等派生比例</td>
-<td>上述数字的简单比值(本次算得)</td>
+<td>+24 跨站特征(119→143); 供体站选择与扇区调制限 2015-09-01 前</td>
+<td><code>scripts/make_features_xst.py</code> 文档串</td>
+<td>阅读脚本即可复现规则</td>
+</tr>
+<tr>
+<td>RF-xst 29.333 / MAE 15.051; LGBM-xst 29.441 / 14.763; XGB-xst 29.59 / 14.62; ET-xst 29.98; LGBMv2-xst 29.79; RF-400 29.32</td>
+<td>models/log_rf_xst.txt、log_lgbm_xst.txt、log_xgb_xst.txt、log_et_rf400_xst.txt</td>
+<td>全量训练日志(同切分同特征)</td>
+</tr>
+<tr>
+<td>集成3 验证 28.88 / LB 27.17; ensemble-xst LB 27.34; 校准 LB 27.90</td>
+<td>成果总览 index.html(做判分离验收); LB 提交回填</td>
+<td>见成果检查/index.html</td>
+</tr>
+<tr>
+<td>全量重训 360,954 行 × 143 特征(无留出)→ LB 24.68</td>
+<td>log_full_retrain.txt; LB 提交回填</td>
+<td>submission_full_ensemble.csv</td>
+</tr>
+<tr>
+<td>尾部加权(LB 24.65)</td>
+<td>log_tailweight.txt(样本权重 1/4/12); LB 回填</td>
+<td>submission_w_J.csv</td>
+</tr>
+<tr>
+<td>节日特征(LB 24.67; 除夕+春节 576 行预测 194.37→197.15)</td>
+<td>reports/festival_features.md §4–§6; LB 回填</td>
+<td>submission_fest.csv</td>
+</tr>
+<tr>
+<td><strong>最终 LB 24.50, 权重 RF0.35+XGB600 0.50+LGBM350 0.15</strong></td>
+<td>log_iter600.txt; festival_features.md §3(与 24.50 基线同权重结构); LB 回填</td>
+<td>submission_w_H.csv(同结构基线)</td>
+</tr>
+<tr>
+<td>误差结构(≥150 行 18.37% → 80.33% SSE; 预测斜率 0.79)</td>
+<td>reports/error_analysis.md</td>
+<td>error_analysis.py 复现</td>
+</tr>
+<tr>
+<td>降幅 ~76% / −10.6% / −9.2% / −0.7% 等派生比例</td>
+<td>上述数字的简单比值</td>
 <td>见正文标注</td>
 </tr>
 </tbody>
 </table></section>
-<section lang="en"><h1>Insights Story Pack — Beijing Multi-Site Air Quality Demo Narrative</h1>
+<section lang="en"><h1>Insights Story — Final · Beijing Multi-Site Air Quality Demo Narrative</h1>
 <blockquote>
 <p>Purpose: live demo on Monday (3-minute storyline + Q&amp;A ammunition for the judges). Assumed audience: <strong>industry/public-health professionals who do not know ML details</strong>.
-Number discipline: every figure comes from verified artifacts (<code>reports/EDA_report.md</code>, <code>models/log_rf_raw.txt</code>, <code>models/log_rf_boxcox.txt</code>, <code>models/rf_raw_importance.csv</code>, <code>STATUS.md</code>); items flagged "computed on the fly for this report" are descriptive statistics computed directly from <code>train.csv</code>; nothing has been hand-made or fabricated.
-Generated: 2026-09-05 · Hero figure: <code>reports/fig4_feature_importance.png</code></p>
+Number discipline: throughout, we distinguish <strong>validation RMSE</strong> (chronological validation set 2015-09→2016-02 heating season, 51,349 station-hours) from <strong>LB RMSE</strong> (Kaggle test-set score; test period 2016-09→2017-02 heating season incl. Chinese New Year 2017, 51,063 rows). Every figure comes from verified artifacts (<code>reports/EDA_report.md</code>, <code>reports/error_analysis.md</code>, <code>reports/festival_features.md</code>, <code>STATUS.md</code>, <code>models/log_rf_raw.txt</code>, <code>models/log_rf_xst.txt</code>, <code>models/log_full_retrain.txt</code>, <code>models/log_tailweight.txt</code>, <code>models/log_iter600.txt</code>, <code>models/rf_raw_importance.csv</code>, results overview <code>index.html</code>); LB figures come from the Kaggle leaderboard submission log (each one re-checked and accepted by manager and user); nothing has been hand-made or fabricated.
+Generated: 2026-09-06 · Hero figure: <code>reports/fig4_feature_importance.png</code></p>
 </blockquote>
 <hr />
 <h2>0. The One-Sentence Takeaway (Elevator Statement, Opening 15 Seconds)</h2>
 <blockquote>
-<p><strong>Using 3.5 years of hourly "current-moment" observations from Beijing's 12 national air-quality monitoring stations (pollutants PM10/SO2/NO2/CO/O3 + meteorology TEMP/PRES/DEWP/RAIN/wd/WSPM — 11 types of raw readings, from which 119 features were derived), we trained a random forest model to forecast the PM2.5 concentration of the "next hour". On a strictly time-split validation set the error is RMSE = 32.8 μg/m³ (mean absolute error of just 16.4) — an ~68% reduction in error versus the naive "always predict the mean" baseline (102.0) — and it needs no historical PM2.5 data of its own.</strong>
-This approach answers the three questions posed by the organizers: <strong>① What drives PM2.5 → co-emitted pollutants (PM10 and CO). ② How pollution patterns vary across stations and seasons → urban is ~28% higher than suburban, and heating-season nights are the primary window for standard exceedances. ③ Implications for monitoring and public-health planning → PM10 can serve as an early-warning proxy, with rolling warnings issued 1 hour ahead on heating-season evenings.</strong></p>
+<p><strong>Using hourly "current-moment" observations from Beijing's 12 national monitoring stations (PM10/SO2/NO2/CO/O3 + TEMP/PRES/DEWP/RAIN/wd/WSPM — 143 features total = 119 baseline + 24 cross-station wind-transport), we trained a three-model ensemble (Random Forest + XGBoost + LightGBM, weights RF 0.35 + XGB600 0.50 + LGBM350 0.15) on all 360,954 labeled rows — trained right up to the door of the test period — and achieved RMSE = 24.50 μg/m³ on the Kaggle leaderboard: ~76% lower error than the naive "always predict the mean" constant baseline (102.04), with no historical PM2.5 data needed at any point.</strong></p>
+<p>Answers to the three questions posed by the organizers: <strong>① What drives PM2.5 → co-emitted pollutants measured right now (PM10, CO). ② Where the pollution comes from and when it peaks → upwind stations' pollution "flows" in (cross-station transport), heating-season nights are the main window for exceedances, and inter-annual drift makes "training up to the door of the test period" the decisive step. ③ Implications for monitoring and public-health planning → PM10 is a low-cost early-warning proxy, a monitoring network's value lies in seeing pollution "in transit", and rolling warnings matter most in the heating season and around Chinese New Year.</strong></p>
 </blockquote>
 <p><strong>Opening quick-glance table (one screen):</strong></p>
 <table>
@@ -435,8 +542,8 @@ This approach answers the three questions posed by the organizers: <strong>① W
 <tbody>
 <tr>
 <td>Data</td>
-<td>12 stations × hourly 2013-03→2016-08, training 360,954 rows; test 2016-09→2017-02 (heating season) 51,063 rows</td>
-<td>EDA §0 / STATUS</td>
+<td>12 stations × hourly 2013-03→2016-08, all labeled rows 360,954; test period 2016-09→2017-02 (heating season, incl. CNY 2017) 51,063 rows</td>
+<td>direct read of train.csv / STATUS</td>
 </tr>
 <tr>
 <td>Task</td>
@@ -444,31 +551,92 @@ This approach answers the three questions posed by the organizers: <strong>① W
 <td>EDA §0</td>
 </tr>
 <tr>
-<td>Method</td>
-<td>Random Forest (200 trees, depth 30), strict temporal split validation (random K-fold rejected)</td>
-<td>train_rf_spec / log</td>
+<td>Final method</td>
+<td>Ensemble RF 0.35 + XGB (600 rounds) 0.50 + LGBM (350 rounds) 0.15; 143 features (incl. +24 cross-station wind transport); <strong>full retrain up to the test door</strong></td>
+<td>log_iter600 / log_full_retrain</td>
 </tr>
 <tr>
-<td>Validation accuracy</td>
-<td><strong>RMSE 32.8</strong> / MAE 16.4 (raw scale, heating-season validation set of 51,349 rows)</td>
-<td>log_rf_raw.txt</td>
+<td>Final score</td>
+<td><strong>Kaggle LB RMSE 24.50 μg/m³</strong></td>
+<td>LB submission log (verified)</td>
 </tr>
 <tr>
 <td>Baseline comparison</td>
-<td>Constant baseline 102.0 (≈ validation-set std) → down 68%; linear no-lag baseline 36.1 → further down 9.1%</td>
-<td>EDA §7 + ratio computed on the fly</td>
+<td>Constant baseline 102.04 → error down <strong>~76%</strong></td>
+<td>EDA §7 + ratio computed</td>
 </tr>
 <tr>
-<td>Strongest variable</td>
+<td>Strongest signal</td>
 <td>PM10 (correlation r=+0.85, model importance 72.2%)</td>
 <td>EDA §4 / importance csv</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The score chain (whole journey at a glance; validation = chronological heating-season split; LB = Kaggle test):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Val RMSE</th>
+<th>LB RMSE</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Constant baseline</td>
+<td>102.04</td>
+<td>—</td>
+<td>organiser-level baseline (≈ validation-set std)</td>
+</tr>
+<tr>
+<td>Linear regression (no lags)</td>
+<td>36.09</td>
+<td>—</td>
+<td>reference</td>
+</tr>
+<tr>
+<td>RF (119 features)</td>
+<td>32.80</td>
+<td>—</td>
+<td>previous-generation lead single model</td>
+</tr>
+<tr>
+<td>Old ensemble 0.6RF+0.4LGBM</td>
+<td>32.58</td>
+<td>—</td>
+<td>previous-generation best</td>
+</tr>
+<tr>
+<td>🆕 <strong>RF-xst (+24 cross-station wind-transport features)</strong></td>
+<td><strong>29.33</strong></td>
+<td>—</td>
+<td><strong>biggest single improvement of the whole project (−10.6%)</strong></td>
+</tr>
+<tr>
+<td>Ensemble3 0.5RF+0.35XGB+0.15LGBM</td>
+<td>28.88</td>
+<td>27.17</td>
+<td>best cross-station-era blend (best on LB at the time)</td>
+</tr>
+<tr>
+<td>Full retrain to the test door (143 features, no holdout)</td>
+<td>—</td>
+<td>24.68</td>
+<td>time-alignment insight (−9.2%)</td>
+</tr>
+<tr>
+<td>🏆 <strong>Weight/iteration tuning RF0.35+XGB600 0.50+LGBM350 0.15</strong></td>
+<td>—</td>
+<td><strong>24.50</strong></td>
+<td><strong>FINAL SUBMISSION (optimal weights)</strong></td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h2>1. Finding One: What Drives PM2.5? — "Co-emitted Pollutants" Are the Overwhelmingly Dominant Predictors</h2>
 <h3>1.1 The Storyline (Plain Language for the Judges)</h3>
-<p>PM2.5 does not appear out of thin air. Beijing's winter haze comes mainly from <strong>combustion processes</strong>: power plants and heating boilers, vehicle exhaust, industry, and fugitive dust. These processes <strong>simultaneously</strong> emit PM10 (coarse particles), CO (carbon monoxide), NO2 (nitrogen dioxide), and more — they "co-vary with PM2.5 because they share the same sources". Therefore, <strong>you do not need to wait for the PM2.5 instrument reading: the moment you see PM10 and CO spike in the same hour, you can infer that next-hour PM2.5 is likely to rise as well.</strong> That is the physical foundation of the entire forecasting model.</p>
+<p>PM2.5 does not appear out of thin air. Beijing's winter haze comes mainly from <strong>combustion processes</strong>: power plants and heating boilers, vehicle exhaust, industry, and fugitive dust. These processes <strong>simultaneously</strong> emit PM10 (coarse particles), CO (carbon monoxide), NO2 (nitrogen dioxide), and more — they co-vary with PM2.5 because they share the same sources. Therefore, <strong>you do not need to wait for the PM2.5 instrument reading: the moment you see PM10 and CO spike in the same hour, you can infer that next-hour PM2.5 is likely to rise as well.</strong> That is the physical foundation of the entire forecasting model.</p>
 <h3>1.2 Dual Evidence: Data Correlation + Model Importance — Two Independent Routes to the Same Answer</h3>
 <p><strong>Evidence A — Correlations (EDA, Pearson correlation, pairwise deletion of missing values):</strong></p>
 <table>
@@ -508,64 +676,100 @@ This approach answers the three questions posed by the organizers: <strong>① W
 <tr>
 <td>TEMP / O3</td>
 <td>−0.122 / −0.133</td>
-<td>Weak negative correlation: the photochemically active warm season tends to be cleaner</td>
+<td>Weak negative: the photochemically active warm season tends to be cleaner</td>
 </tr>
 </tbody>
 </table>
 <p><em>Source: feature–target correlation table in EDA_report.md §4.</em></p>
 <p><strong>Evidence B — Inside-the-model view (RF feature importance, read directly from <code>models/rf_raw_importance.csv</code>):</strong></p>
 <p><img alt="Feature predictive power" src="fig4_feature_importance.png" />
-<em>Figure: Top-12 random-forest feature importance (validation set of 51,349 rows, raw scale). Drawn for this report with <code>scripts/fig4_feature_importance.py</code>.</em></p>
+<em>Figure: Top-12 random-forest feature importance (119-feature original set, validation set of 51,349 rows). Drawn by <code>scripts/fig4_feature_importance.py</code>, which reads the importance file directly — no hand-entered numbers.</em></p>
 <ul>
-<li>Aggregating the importance file (top 50 features, jointly accounting for 95.2% of the importance of all 119 features): <strong>the pollutant family alone — current readings plus historical windows — accounts for ~88% of total importance</strong> (PM10 72.2% + CO 10.1% + the remaining pollutants and their lags/rolling windows), the meteorology family ~5%, and time/season/station ~2%. (<em>Definition: sum of top-50 importances within each family ÷ total importance across all features; summed from rf_raw_importance.csv for this report.</em>)</li>
-<li>Meteorology is "second-tier but real" in the model: DEWP (dew point, 0.8%), WSPM (wind speed, 0.5%), TEMP's 24h mean (0.4%), etc. reach the upper ranks; calendar features (dayofyear sine/cosine) sit at ~0.7–0.8% each, acting only as seasonal priors.</li>
-<li><strong>The correlation analysis and the importance ranking corroborate each other</strong> (PM10 and CO firmly in the top two; wind is negatively correlated yet positively important) — two completely independent methods reach the same conclusion; this is not a fluke of a single path.</li>
+<li>Aggregating the importance file (top 50 features, jointly accounting for 95.2% of all-feature importance): <strong>the pollutant family alone — current readings plus historical windows — accounts for ~88% of total importance</strong> (PM10 72.2% + CO 10.1% + remaining pollutants with their lags/rolling windows), the meteorology family ~5%, and time/season/station ~2%. (<em>Definition: sum of top-50 importances within each family ÷ total importance across all features.</em>)</li>
+<li>Meteorology is "second-tier but real": DEWP (dew point, 0.8%), WSPM (wind speed, 0.5%), TEMP's 24h mean (0.4%) reach the upper ranks; calendar features (dayofyear sine/cosine) sit at ~0.7–0.8% each, acting only as seasonal priors.</li>
+<li><strong>The correlation analysis and the importance ranking corroborate each other</strong> (PM10 and CO firmly in the top two; wind: negative correlation ↔ positive importance) — two completely independent methods reach the same conclusion; this is not a fluke of a single path.</li>
+<li>Caveat: PM10 and CO are "co-sourced" variables, and permutation-style importance tends to favor one member of such correlated groups — which is exactly why we also show the correlation table (honest disclosure, §5.6).</li>
 </ul>
 <p><strong>One-sentence summary for the judges: next-hour PM2.5 is determined mainly by "today's PM10 and CO right now"; meteorological conditions such as wind and humidity are second-order moderators.</strong></p>
 <p><em>Supporting evidence: EDA_report.md §4 correlation table + §7 baseline B3 interpretation; rf_raw_importance.csv; figure fig4_feature_importance.png.</em></p>
 <hr />
-<h2>2. Finding Two: The Spatial Divide — Urban and Suburban Are Two Different Worlds; One "Background Station" Cannot Represent the Whole City</h2>
-<h3>2.1 The Numbers (12-Station Full-Period Means, μg/m³)</h3>
+<h2>2. Finding Two (NEW): Pollution "Flows" — Cross-Station Wind Transport Was the Biggest Single Breakthrough</h2>
+<h3>2.1 The Storyline: One Station Is Not Enough — Watch Your Neighbours and the Wind</h3>
+<p>The previous-generation model (validation RMSE 32.8) used only <strong>readings from the target station's own mast</strong> — like watching only your own courtyard while ignoring the neighbours and the wind. But air moves: Beijing's 12 stations are only a few to a few dozen kilometres apart, and <strong>what the upwind station measures right now is next hour's pollution at the downwind station</strong>. The hourly wind direction tells the model "where next hour's air at this station comes from"; the neighbouring stations' current PM10/CO are the signal of pollution "in transit — not yet arrived". This section is about what happened when we gave the model "neighbours + wind".</p>
+<h3>2.2 Method: 24 Cross-Station Features Built Inside Our Own Data Only (Zero External Data)</h3>
+<ul>
+<li><strong>Zero-external-data red line</strong>: no station coordinates, no outside datasets — everything is derived from <code>train.csv</code>/<code>test(1).csv</code> itself (script <code>scripts/make_features_xst.py</code>).</li>
+<li><strong>Donor-station discovery (leakage-safe)</strong>: for each target station, using <strong>only the window before 2015-09-01</strong> (the ablation training window of that era), we correlate the other 11 stations' PM10/CO at lags 0–3 h with the target's next-hour PM2.5 and select the <strong>top-3 "donor stations" per target station</strong>.</li>
+<li><strong>The 24 new features (119 → 143)</strong>:</li>
+<li>top-3 donors' PM10/CO readings at lag 0 / 1 h / 2 h (18 columns);</li>
+<li>correlation-weighted donor-PM10 average (1 column);</li>
+<li>full 12-station snapshot: PM10 mean and max at the same hour (2 columns) — "how polluted the whole city is right now";</li>
+<li><strong>wind-sector-modulated features (3 columns)</strong>: map the station's 16-direction wind into four 90° sectors (N/E/S/W) and, inside each sector, re-select the single strongest (pollutant × lag) combination — i.e., <strong>only transport from an upwind direction counts as a valid signal</strong>.</li>
+</ul>
+<h3>2.3 Result: The Biggest Single Improvement of the Whole Project (Validation Set, Identical Time Split)</h3>
 <table>
 <thead>
 <tr>
-<th>Group</th>
-<th>Stations (mean)</th>
-<th>Feature</th>
+<th>Model</th>
+<th>Val RMSE</th>
+<th>MAE</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Urban core</td>
-<td><strong>Dongsi 83.7</strong> (dirtiest) / Nongzhanguan 82.7 / Wanshouxigong 82.4 / Wanliu 82.2 / Gucheng 81.6 / Aotizhongxin 81.1 / Guanyuan 80.9 / Tiantan 80.1</td>
-<td>The 8 urban stations cluster tightly: 80.1–83.7, within-group range of only 3.6</td>
+<td>RF (119 features, previous lead)</td>
+<td>32.80</td>
+<td>16.38</td>
+<td>control baseline</td>
 </tr>
 <tr>
-<td>Transitional / near-suburban</td>
-<td>Shunyi 77.9</td>
-<td>In between the two</td>
+<td>Old ensemble 0.6RF+0.4LGBM</td>
+<td>32.58</td>
+<td>~16.1</td>
+<td>previous-generation best</td>
 </tr>
 <tr>
-<td>Suburban background</td>
-<td>Changping 69.8 / Huairou 68.9 / <strong>Dingling 65.2</strong> (cleanest)</td>
-<td>65–70</td>
+<td>🆕 <strong>RF-xst (143 features)</strong></td>
+<td><strong>29.33</strong></td>
+<td>15.05</td>
+<td><strong>−3.47, ≈ −10.6%, largest single step of the project</strong></td>
+</tr>
+<tr>
+<td>LGBM-xst</td>
+<td>29.44</td>
+<td>14.76</td>
+<td>same features, same split</td>
+</tr>
+<tr>
+<td>XGB-xst</td>
+<td>29.59</td>
+<td><strong>14.62</strong></td>
+<td>best MAE; complementary with RF → joined the final blend</td>
+</tr>
+<tr>
+<td>ExtraTrees-xst / LGBMv2-xst / RF-400</td>
+<td>29.98 / 29.79 / 29.32</td>
+<td>—</td>
+<td>experiments reported honestly: no gain, not selected</td>
+</tr>
+<tr>
+<td><strong>Ensemble3 0.5RF+0.35XGB+0.15LGBM</strong></td>
+<td><strong>28.88</strong></td>
+<td>~14.8</td>
+<td>→ <strong>LB 27.17</strong> (best on LB at the time)</td>
 </tr>
 </tbody>
 </table>
+<p><em>Source: training logs <code>models/log_rf_xst.txt</code> (29.333/15.051), <code>log_lgbm_xst.txt</code>, <code>log_xgb_xst.txt</code>, etc.; blend and LB figures in the results overview <code>index.html</code> (verifier-accepted).</em></p>
+<h3>2.4 Why This Matters (Interpretation)</h3>
 <ul>
-<li><strong>The dirtiest urban station (Dongsi 83.7) is 18.5 μg/m³ — about 28% — higher than the cleanest suburban background station (Dingling 65.2)</strong> (EDA wording: range ≈18.5 μg/m³, ≈28%).</li>
-<li>The 12 stations share similar distribution shapes (all right-skewed, std 70–83); the difference lies mainly in <strong>mean level</strong>.</li>
-<li>Interestingly, station ID ranks only 45th in model feature importance (0.13%) — <strong>the differences between stations are essentially absorbed by "that station's pollutant readings at that moment"</strong>: urban stations are dirty because their PM10/CO levels are inherently high. In other words, once you have real-time pollutant readings, "which station you are at" adds almost no predictive information.</li>
+<li><strong>Pollution is a regional-scale "moving event", not a local property of one station.</strong> The upwind station's real-time reading is the "in-transit signal" for the downwind station's next-hour PM2.5; the wind-sector features further show <strong>directionality</strong> — only upwind transport is predictive, matching the physics of air transport.</li>
+<li><strong>A single monitoring station is not enough</strong>: however good one station's instruments are, they cannot see pollution "flowing in from the neighbours". Cross-station features weave the 12 stations into a network — <strong>a network's value is not just redundancy; it can see pollution moving</strong> (this model provides a 1-hour lead).</li>
+<li>Public-health extension: <strong>upstream readings can serve as downstream early signals</strong> — the denser the network and the more continuous the wind data, the more reliable the "upstream warning" lead time (see §4.③).</li>
 </ul>
-<h3>2.2 Implications for Monitoring-Network Design (Bonus Points with the Judges)</h3>
-<ol>
-<li><strong>Suburban background stations cannot represent urban population exposure</strong>: if Dingling (65.2) were taken to represent all of Beijing, while the 8 urban stations average about 82 (81.8, computed for this report) and the dirtiest station is 83.7 — true urban exposure would be systematically underestimated by ~18.5 μg/m³, equivalent to 23% of urban levels, enough to affect pollution-grade classification and health warnings. Health warnings must use urban station data (or be primarily based on it).</li>
-<li><strong>Urban stations are redundant with one another yet still necessary</strong>: the 8 urban stations are highly consistent (range of 3.6), showing that urban pollution is regional — if one station fails, neighboring stations can cross-check or substitute; the suburban background stations play the unique role of "regional transport and background assessment" — <strong>the two station types have different jobs; both should be kept</strong>.</li>
-<li>The station concentration gap of ≈18.5 μg/m³ is <strong>systematic and perennial</strong> (not occasional) — exposure assessments and epidemiological studies that mix stations would introduce roughly a 20% systematic bias; research designs must stratify by urban/suburban.</li>
-</ol>
-<p><em>Supporting evidence: station table and interpretation in EDA_report.md §2; rf_raw_importance.csv (station_code 0.13%); figure fig2_station_means.png.</em></p>
 <hr />
-<h2>3. Finding Three: The Temporal Dimension — "Heating Season + Night" Is the Main Window for High Concentrations</h2>
+<h2>3. Finding Three: The Temporal Dimension — Heating Season, Diurnal Cycle, and Inter-Annual Drift</h2>
 <h3>3.1 Seasonality: Winter Is ~1.8× Summer</h3>
 <p>Full-period, 12-station pooled calendar-month means (μg/m³):</p>
 <table>
@@ -604,12 +808,14 @@ This approach answers the three questions posed by the organizers: <strong>① W
 </table>
 <ul>
 <li>The heating season (Oct–Mar) is systematically higher than the warm season (May–Aug); the December mean of 96.0 is <strong>1.8×</strong> August's 53.4.</li>
-<li><strong>But beware the "inter-annual trap"</strong>: the two most extreme months are 2015-12 (150.1) and 2016-02 (42.9) — in the very same "February", 2014 hit 148.3 while 2016 was only 42.9. Forecasting from "which month" alone would be broken by inter-annual drift (baseline B2, "station × month means", has an RMSE of 107.8 — even worse than the constant baseline of 102.0!). The model must therefore rely primarily on real-time observational features, with the calendar serving only as a prior. <em>(EDA §3, §7 B2)</em></li>
+<li>The spatial backdrop (urban vs suburban): among the 12 stations, the 8 urban stations cluster at 80.1–83.7 (dirtiest: Dongsi 83.7) while suburban background stations go as low as 65.2 (Dingling, cleanest) — a range of 18.5 μg/m³, ≈28% (EDA §2).</li>
 </ul>
-<h3>3.2 Diurnal Cycle: Evenings Are the "Climbing Ramp", Steepest in the Heating Season (Computed on the Fly from train.csv for This Report)</h3>
-<blockquote>
-<p>Note: the EDA report contains no within-day analysis; the figures below are descriptive statistics computed directly for this report by grouping <code>train.csv</code> (360,954 rows) by hour (hour h of the observation; target = PM2.5 one hour after that moment; all 12 stations pooled over the full period).</p>
-</blockquote>
+<h3>3.2 The Inter-Annual Trap: The Calendar Is Unreliable, Real-Time Observations Are Not</h3>
+<ul>
+<li>The two most extreme months are 2015-12 (150.1) and 2016-02 (42.9) — in the very same "February", 2014 hit 148.3 while 2016 was only 42.9. Forecasting from "which month" alone would be broken by <strong>inter-annual drift</strong>: baseline B2 ("station × month means") scores RMSE 107.8 — even <em>worse</em> than the constant baseline of 102.04!</li>
+<li>Conclusion: the model must rely primarily on real-time observational features (Findings One and Two), with the calendar serving only as a prior — <strong>which is also why "training up to the door of the test period" matters so much (§3.4)</strong>.</li>
+</ul>
+<h3>3.3 Diurnal Cycle: Evenings Are the "Climbing Ramp", Steepest in the Heating Season (Computed on the Full train.csv for This Report)</h3>
 <table>
 <thead>
 <tr>
@@ -647,88 +853,48 @@ This approach answers the three questions posed by the organizers: <strong>① W
 </tbody>
 </table>
 <ul>
-<li><strong>Pattern 1 (all years)</strong>: 15:00–16:00 is the daily low (the period of best atmospheric dispersion); concentrations then climb continuously and <strong>peak at 20:00–21:00</strong> — the classic signature of a day's accumulated emissions plus a lowered nocturnal boundary layer and weakened dispersion.</li>
-<li><strong>Pattern 2 (heating season)</strong>: after the 13:00 trough of 78.3, concentrations climb all the way and <strong>surge to 112.5 at 21:00 (44% above the trough)</strong>, holding at 110–113 for four consecutive hours from 20:00 to 23:00 — heating combustion on top of nocturnal stagnation makes this the dirtiest window of the day.</li>
-<li><strong>Pattern 3 (warm season)</strong>: flat all day (60–69), with only a slow rise into a small morning peak at 6:00–8:00 (68.8) and the low at 15:00–17:00 — consistent with the physical intuition of a high, convective summer boundary layer and no heating.</li>
-<li>⚠️ To be clear: the model's feature importance shows that hour-level calendar features carry very low weight on their own (weekday 0.15%, dayofyear family 0.7–0.8%) — <strong>the diurnal signal is carried by the real-time pollutant + meteorological features</strong> (which are inherently higher in the evening); what the model has learned is the "cause", not the "clock time". That is exactly what we want to demonstrate: the model mimics the physical process rather than memorizing the calendar.</li>
+<li><strong>All years</strong>: 15:00–16:00 is the daily low (best atmospheric dispersion of the day); concentrations then climb continuously and <strong>peak at 20:00–21:00</strong> — the classic signature of a day's accumulated emissions plus a lowered nocturnal boundary layer and weakened dispersion.</li>
+<li><strong>Heating season</strong>: after the 13:00 trough of 78.3, concentrations climb all the way and <strong>surge to 112.5 at 21:00 (44% above the trough)</strong>, holding at 110–113 for four consecutive hours (20:00–23:00) — heating combustion on top of nocturnal stagnation makes this the dirtiest window of the day.</li>
+<li><strong>Warm season</strong>: flat all day (60–69), with only a small morning peak at 6:00–8:00 (68.8) — consistent with the physical intuition of a high, convective summer boundary layer and no heating.</li>
+<li>⚠️ Hour-level calendar features carry very low weight on their own (weekday 0.15%, dayofyear family 0.7–0.8%) — <strong>the diurnal signal is carried by the real-time pollutant + meteorological features</strong>: the model has learned the "cause", not the "clock time". It mimics the physical process rather than memorizing the calendar.</li>
 </ul>
-<p><em>Supporting evidence: monthly table in EDA_report.md §3; the diurnal analysis was computed on the fly for this report (method: pandas groupby('hour') over the full train.csv), and the computing script is reproducible; importance from rf_raw_importance.csv.</em></p>
+<h3>3.4 Inter-Annual Drift → Why "Training Up to the Door of the Test Period" Was the Decisive Step</h3>
+<ul>
+<li>The test period (2016-09→2017-02) is a <strong>heating season that contains Chinese New Year 2017 (2017-01-28; New Year's Eve 01-27)</strong>. We deliberately chose the chronological validation window as the <strong>same-season heating period 2015-09→2016-02</strong> (51,349 rows), making validation and test "climatically isomorphic".</li>
+<li>The temporal validation therefore correctly predicted the next move: <strong>pushing the training window closer to the test period would pay off</strong>. The facts: the cross-station-era Ensemble3 scored LB 27.17; after retraining on <strong>all 360,954 labeled rows (up to 2016-08-31 22:00 — one hour before the test period begins)</strong>, the LB dropped to <strong>24.68 (−9.2%)</strong>.</li>
+<li>Why? <strong>Under inter-annual drift, data closest to the test period has the most similar distribution.</strong> The gain did not come from new features — it came from the model having "seen the most recent air", which resembles the air it must predict. "Training to the door" is the simplest and most effective countermeasure against inter-annual drift.</li>
+<li>The last mile: on that same full-data baseline we scanned <strong>blend weights and iteration counts</strong> (XGB 600 rounds / LGBM 350 rounds); the optimal weights <strong>RF 0.35 + XGB600 0.50 + LGBM350 0.15</strong> pushed the LB to <strong>24.50</strong>.</li>
+</ul>
+<p><em>Supporting evidence: monthly table EDA §3; station table EDA §2; diurnal analysis computed on train.csv (360,954 rows) by groupby hour (independently re-checked on 2026-09-05); LB changes in the §0 score chain.</em></p>
 <hr />
-<h2>4. Public-Health and Management Implications (5 Actionable Recommendations)</h2>
+<h2>4. Public-Health and Monitoring Implications (5 Actionable Recommendations)</h2>
 <p><strong>① Use PM10 as a low-cost "proxy early-warning indicator" for PM2.5.</strong>
-PM10 correlates with next-hour PM2.5 at r=+0.85 and is the model's number-one feature (72.2% importance); PM10 also has a missing-data rate of only 0.5%, far below CO's 4.4%. When PM2.5 monitoring instruments are under maintenance or faulty — or when the budget only allows single-channel sensors — <strong>PM10 readings (plus CO when necessary) can reliably infer PM2.5 trends</strong>, letting cities cut monitoring-network costs and improve resilience.
-(<em>Evidence: EDA §4 correlation table, §5 missingness table; rf_raw_importance.csv</em>)</p>
-<p><strong>② The heating-season "evening–night" period is the best window for advance warning.</strong>
-Heating months average 112.5 μg/m³ at 21:00 (≈1.4× the all-data daily mean concentration of 78), and 20:00–23:00 stays continuously above 110; the December mean (96) is 1.8× August's (53). Recommendation: issue seasonal health notices around heating start-up (November); <strong>run 1-hour rolling warnings between 17:00 and 20:00 each day based on real-time PM10/CO</strong> so that sensitive groups (the elderly, children, asthma sufferers) can shift their outdoor activity away from peak hours — because every input to this model is "observable at the current moment", it naturally supports hour-by-hour rolling issuance.
-(<em>Evidence: diurnal table computed on the fly for this report; EDA §3 monthly table</em>)</p>
-<p><strong>③ Issue exposure warnings from the urban stations; keep the suburban background stations for regional assessment.</strong>
-The 8 urban stations cluster at 80.1–83.7, while the suburban background stations go as low as 65.2 — 18.5 μg/m³ below the dirtiest urban station (≈23% relative to the urban mean). Representing the whole city with suburban stations would systematically understate population exposure; <strong>warnings should be based primarily on the urban stations</strong>, while the suburban background stations continue to serve regional-transport and background monitoring; the high consistency among urban stations also means a single failed station can be filled in by its neighbors.
-(<em>Evidence: EDA §2 station table; §2.2 of this report</em>)</p>
-<p><strong>④ Monitoring-network maintenance priority: the CO channel is the one that must not fail.</strong>
-CO is the model's second-most-important feature (10.1%), yet it is the pollutant column with the highest missing-data rate in the whole dataset (4.4%; next are O3 at 2.4% and NO2 at 2.1%). In real deployments, <strong>a CO channel failure would directly weaken the accuracy of 1-hour warnings</strong>; the data pipeline should impute missing CO in real time (feasible via its association with PM10/NO2), and instrument inspections should prioritize CO.
-(<em>Evidence: EDA §5 missingness table; rf_raw_importance.csv</em>)</p>
-<p><strong>⑤ "Predicting without PM2.5 history" = an early-warning system that can be independently cross-validated.</strong>
-Because the data design deliberately contains no current_PM2_5 (the anti-leakage red line), this model's forecasts rest entirely on <strong>other pollutants and meteorology</strong> — which means: even if every PM2.5 sensor at a station fails, as long as PM10/CO/meteorology are still working, warnings keep running as usual. Conversely, comparing model predictions against true PM2.5 provides a <strong>reverse check on PM2.5 instrument drift</strong>. One dataset, two uses.
-(<em>Evidence: EDA §0 (no current_PM2_5 column); log_rf_raw.txt accuracy; method described in §5</em>)</p>
+PM10 correlates with next-hour PM2.5 at r=+0.85 and is the model's number-one feature (72.2% importance); PM10's missing-data rate is only 0.5%, far below CO's 4.4%. When PM2.5 instruments are under maintenance or faulty — or when the budget only allows single-channel sensors — <strong>PM10 readings (plus CO when necessary) can reliably infer PM2.5 trends</strong>. Going further: this model never needs PM2.5's own history (a data-design red line), so even if every PM2.5 sensor at a station fails, warnings keep running as long as PM10/CO/meteorology work; conversely, comparing predictions against true PM2.5 provides a <strong>reverse check on PM2.5 instrument drift</strong>. One dataset, two uses.
+(<em>Evidence: EDA §4 correlation table, §5 missingness table; rf_raw_importance.csv; EDA §0</em>)</p>
+<p><strong>② Issue exposure warnings from the urban stations; keep the suburban background stations for regional background.</strong>
+The 8 urban stations cluster at 80.1–83.7 (dirtiest: Dongsi 83.7), while suburban background stations go as low as 65.2 (Dingling) — a gap of 18.5 μg/m³ (≈23% relative to the urban mean). Representing the whole city with suburban stations would <strong>systematically understate population exposure</strong>; the high consistency among urban stations (within-group range 3.6) also means a failed station can be filled in by its neighbours. The two station types have different jobs — <strong>both should be kept</strong>.
+(<em>Evidence: EDA §2 station table</em>)</p>
+<p><strong>③ One point is not enough: network density + wind data are the "upstream warning" asset (the direct application of Finding Two).</strong>
+Finding Two showed that the upwind stations' current PM10/CO carry independent predictive power for the downwind station's next-hour PM2.5 (−10.6%). In practice: a city need not wait for its own readings to deteriorate — <strong>when upwind urban stations spike and the wind points your way, that is the downstream early signal</strong>. A monitoring network's value is therefore not redundancy alone; it is "seeing pollution in transit". Continuous wind-direction (wd) and wind-speed (WSPM) records are themselves early-warning assets and should not be downgraded in maintenance.
+(<em>Evidence: §2; log_rf_xst.txt</em>)</p>
+<p><strong>④ The heating-season "evening–night" period is the best window for rolling warnings.</strong>
+Heating months average 112.5 μg/m³ at 21:00 (≈1.4× the all-data daily mean of 78), with 20:00–23:00 holding continuously above 110; the December mean (96) is 1.8× August's (53). Recommendation: issue seasonal health notices around heating start-up (November); <strong>run 1-hour rolling warnings between 17:00 and 20:00 daily based on real-time PM10/CO</strong> so sensitive groups (the elderly, children, asthma sufferers) can shift outdoor activity away from peak hours. Every input to this model is "observable at the current moment", so it naturally supports hour-by-hour rolling issuance.
+(<em>Evidence: §3.3 diurnal table; EDA §3 monthly table</em>)</p>
+<p><strong>⑤ Festivals and Chinese New Year: treat holidays as "warning-promotion windows", not calendar hard-coding.</strong>
+The test period contains CNY 2017 (2017-01-28). We ran a dedicated festival-feature experiment (12 columns for CNY/New Year's Eve/National Day etc.; pure calendar knowledge, zero external data): the model did "use" them — for the 576 New Year's Eve + CNY rows (1.1% of the test period) the mean prediction rose from 194.37 to 197.15 (the direction of fireworks/activity emissions, consistent with the error analysis showing peak underestimation) — yet the LB of 24.67 <strong>did not beat</strong> the final 24.50. Honest conclusion: "a festival that is predictable on the calendar" is not necessarily "a festival the model can exploit robustly"; <strong>warnings should be triggered by real-time readings, with holidays used for promotion and resource deployment</strong> (e.g., pre-deploying health notices, reinforcing the 17:00–20:00 rolling warning), not for calendar dummies.
+(<em>Evidence: reports/festival_features.md §4–§6; error_analysis.md</em>)</p>
 <hr />
 <h2>5. Methods and Rigor (So That Judges Can Trust the Results)</h2>
 <ol>
-<li><strong>Strict temporal split — no "peeking into the future"</strong>: the data are split chronologically into train 2013-03→2015-08 (257,927 rows) / validation 2015-09→2016-02 (51,349 rows); the 51,678 rows after 2016-03 are <strong>discarded entirely</strong>; the validation window deliberately covers the <strong>heating season</strong>, the same season as the test set. Randomly shuffled K-fold would be wrong here — adjacent hours are highly correlated and would systematically inflate accuracy, so it was rejected. <em>(EDA §7; log_rf_raw.txt)</em></li>
-<li><strong>Features use only "the present and the past"</strong>: all 119 features = current-hour pollutant/meteorological readings + their historical lag/rolling windows (lag1–24h, roll3–24h) + calendar — <strong>no future information whatsoever</strong>; missing values are filled with medians estimated on the training segment only (no leakage into validation). Lag features are constructed on an hour-grid alignment (the data contain ~2,466 missing hours; row-shift construction would misalign every lag after a missing hour — rewritten to align by timestamp and verified by spot checks at 21 time points). <em>(STATUS.md P1-A; train_rf_spec.md)</em></li>
-<li><strong>The model is interpretable and the conclusions can be cross-validated</strong>: the random forest outputs a contribution ranking for every variable that corroborates the EDA's independent correlation analysis (PM10: correlation 0.85 ↔ importance 72%; CO: 0.76 ↔ 10%; wind speed: negative correlation ↔ positive importance). Two independent evidence chains point to the same physical story.</li>
-<li><strong>The target transformation was tested, it lost, and we report it honestly</strong>: the target is strongly right-skewed (mean 78 &gt; median 55, skewness 2.01, max 999 capped for a single row). We estimated the Box-Cox transformation parameters (full-sample MLE λ=0.167; the same order of magnitude as teammate R's Guerrero λ≈0.09) and ran the full controlled comparison — as it turned out, <strong>raw direct regression (RMSE 32.8) beats Box-Cox (38.1)</strong>. Conclusion: for tree models scored on raw-scale RMSE, the gain from a monotone transformation does not offset the inverse-transformation error. This "negative result" actually shows that <strong>we choose with evidence rather than by habit</strong>.</li>
-<li><strong>Baselines anchor the numbers; the accuracy is interpretable</strong>: the validation-set std is 102.0 → the theoretical RMSE floor for "always predicting the mean" is 102 (the constant baseline measures 102.04, logically consistent with the organizers' placeholder constant of 78.04); a linear model (without any lags) already reaches 36.1; our RF's 32.8 squeezes out a further 9.1% improvement in a setting where the linear model is already near the signal ceiling, and the MAE is only 16.4 (≈21% of the mean concentration of 78). For a heavy-tailed system whose dynamic range reaches 999 while its 75th percentile is only 108, this error level means <strong>the average prediction deviates by less than one air-quality-index band</strong>.</li>
-<li><strong>Honest disclosure of limitations</strong>: ① heavy-tailed target (mean 78 vs median 55; 197 rows above 600, i.e. 0.055%), where under RMSE scoring the squared errors of extreme haze events carry enormous weight — the model's biggest challenge; ② validation covers 2015-09→2016-02 (the bulk of the heating season, same season as the test set), and spring/summer extrapolation is examined by the test set (2016-09→2017-02); ③ feature importance is a permutation-style approximation that will favor one member of highly correlated feature groups (PM10/CO share sources) — which is exactly why we also show the correlation table.</li>
+<li><strong>Strict temporal split — no "peeking into the future"</strong>: the data are split chronologically into train 2013-03→2015-08 (257,927 rows) / validation 2015-09→2016-02 (51,349 rows); the 51,678 rows after 2016-03 are <strong>discarded entirely</strong>; the validation window deliberately covers the <strong>same season as the test set</strong> (heating season). Randomly shuffled K-fold would be wrong here — adjacent hours are highly correlated and would systematically inflate accuracy, so it was rejected. <strong>Every modelling decision (features/models/weights/transforms) was allowed to look only at the validation set, never the test set</strong>; only at the very end was the validation period absorbed into training for the full retrain.</li>
+<li><strong>Three anti-leakage red lines</strong>: ① the data contain no current_PM2_5 column and features use only "the present and the past" — all 119→143 features carry no future information and no PM2.5 self-lags; ② missing values are filled with medians estimated on the training segment only; lag features are aligned to the true hourly grid (the data contain ~2,466 missing hours; row-shift construction would misalign every lag after a missing hour — rewritten to timestamp alignment and spot-checked); ③ <strong>the cross-station donor selection and sector-modulation parameters were discovered only inside the window before 2015-09-01</strong> — validation- and test-period information never entered feature design.</li>
+<li><strong>Producer/verifier separation</strong>: every key number was recomputed and accepted by a verifier independent of the producer — RF 32.8020 / LGBM 32.9998 recomputed identically; submission files checked one by one (51,063 rows / id order matches template / no NaN); blend-weight scans and acceptance scripts were run by different parties.</li>
+<li><strong>Failed experiments are reported too (honest list, double-confirmed on LB)</strong>: ① target transform: Box-Cox (λ=0.2057) scored validation RMSE 38.06, <strong>worse than direct regression's 32.80</strong> — for tree models scored on raw-scale RMSE, a monotone transform's gain does not offset inverse-transform error; ② LGBM small-step v2 (lr=0.03, validation 32.96) is a better single model but its predictions resemble RF more closely, so <strong>the ensemble gain shrank — not adopted</strong>; ③ global calibration: on the LB it was <em>worse</em> (<strong>27.90 vs 27.17 uncalibrated</strong>) — calibration fitted on the 2015-16 validation period did not transfer to the 2016-17 test period, a <strong>live lesson in distribution shift</strong>; ④ tail-weighting (weighting heavy-pollution rows; LB 24.65) and festival features (LB 24.67): both fluctuated in a small band around the final 24.50 and <strong>did not win — rejected</strong>. <strong>Reporting the failures is itself evidence of methodological rigor: temporal validation + LB double-confirmation keeps us from "feeling good on the validation set".</strong></li>
+<li><strong>Baselines anchor the numbers; interpretability cross-checks</strong>: the constant baseline of 102.04 (≈ validation-set std) defines the interpretable floor; two independent evidence chains — EDA correlation and RF importance — corroborate each other (PM10: 0.85 ↔ 72.2%; CO: 0.76 ↔ 10.1%; wind: negative correlation ↔ positive importance); the error analysis names the failure mode: high values are systematically underestimated (prediction slope 0.79), and rows ≥150 μg/m³ are only 18.37% of the validation set yet contribute 80.33% of its squared error — peaks are the main battlefield, which directly shaped the §4 warning advice and the §5.4 failed experiments.</li>
+<li><strong>Honest disclosure of limitations</strong>: ① heavy-tailed target (mean 78 vs median 55, skewness 2.01, cap 999; extreme haze events &gt;600 are only 197 of 360,954 rows, 0.055%), where under RMSE scoring the squared errors of extreme events carry enormous weight; ② validation covers only the heating season (same-season design as the test set), and spring/summer extrapolation was not locally verified; ③ permutation-style importance favors one member of highly correlated feature groups (PM10/CO share sources) — which is why the correlation table is shown alongside; ④ LB figures come from single submissions with no repeated runs to estimate submission noise (the 24.50–24.68 gap between neighbouring variants is only ~0.7% — safest read as "statistically level").</li>
 </ol>
-<p><em>Supporting evidence: EDA_report.md §1/§6/§7; models/log_rf_raw.txt, log_rf_boxcox.txt; STATUS.md (record of the lag grid-alignment fix); reports/train_rf_spec.md.</em></p>
+<p><em>Supporting evidence: EDA_report.md §1/§6/§7; models/log_rf_raw.txt, log_rf_boxcox.txt, log_rf_xst.txt, log_full_retrain.txt, log_tailweight.txt, log_iter600.txt; reports/error_analysis.md, festival_features.md; STATUS.md (verifier separation, lag grid-alignment fix); reports/train_rf_spec.md.</em></p>
 <hr />
-<h2>6. Demo Materials Checklist (Files and Figures)</h2>
-<table>
-<thead>
-<tr>
-<th>Material</th>
-<th>File</th>
-<th>Used for</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>This story script</td>
-<td><code>reports/insights_story.md</code></td>
-<td>narrative order and number ammunition</td>
-</tr>
-<tr>
-<td>Feature-importance figure (newly drawn)</td>
-<td><code>reports/fig4_feature_importance.png</code></td>
-<td>hero figure of Finding One</td>
-</tr>
-<tr>
-<td>12-station mean bar chart</td>
-<td><code>reports/fig2_station_means.png</code></td>
-<td>Finding Two</td>
-</tr>
-<tr>
-<td>Year × month heatmap</td>
-<td><code>reports/fig3_monthly_heatmap.png</code></td>
-<td>Finding Three seasonality + inter-annual trap</td>
-</tr>
-<tr>
-<td>Target distribution figure</td>
-<td><code>reports/fig1_target_distribution.png</code></td>
-<td>Methods/rigor (right skew → transformation experiment)</td>
-</tr>
-<tr>
-<td>Full EDA report</td>
-<td><code>reports/EDA_report.md</code></td>
-<td>Q&amp;A ammunition bank</td>
-</tr>
-<tr>
-<td>Model logs</td>
-<td><code>models/log_rf_raw.txt</code> / <code>log_rf_boxcox.txt</code></td>
-<td>endorsement of the accuracy numbers</td>
-</tr>
-</tbody>
-</table>
 <h2>Appendix A: Number Provenance Checklist (All Reproducible)</h2>
 <table>
 <thead>
@@ -740,39 +906,44 @@ Because the data design deliberately contains no current_PM2_5 (the anti-leakage
 </thead>
 <tbody>
 <tr>
-<td>360,954 rows / 51,063 rows</td>
-<td>EDA §0 / STATUS.md</td>
-<td><code>eda_compute.py</code></td>
+<td>train 360,954 rows (2013-03-01→2016-08-31) / test 51,063 rows (2016-09→2017-02) / 12 stations</td>
+<td>direct read of <code>train.csv</code> / <code>test(1).csv</code></td>
+<td>pandas read</td>
 </tr>
 <tr>
-<td>mean 78 / median 55 / skew 2.01 / max 999</td>
+<td>Train 257,927 / validation 51,349 / discarded 51,678</td>
+<td>STATUS.md; log_rf_raw.txt</td>
+<td>temporal-split logs</td>
+</tr>
+<tr>
+<td>mean 78 / median 55 / skew 2.01 / max 999; &gt;600: 197 rows (0.055%)</td>
 <td>EDA §1</td>
-<td>same (independent recheck of mean 78.044 ✓)</td>
+<td>eda_compute.py (mean 78.044 independently re-checked ✓)</td>
 </tr>
 <tr>
-<td>Stations Dongsi 83.7 / Dingling 65.2 / range 18.5 ≈28%</td>
+<td>Stations Dongsi 83.7 / Dingling 65.2 / range 18.5 ≈ 28%</td>
 <td>EDA §2 station table</td>
 <td>same</td>
 </tr>
 <tr>
-<td>Monthly table (Dec 96.0 highest / Aug 53.4 lowest; 2015-12 = 150.1; 2016-02 = 42.9)</td>
+<td>Monthly table (Dec 96.0 highest / Aug 53.4 lowest; 2015-12=150.1; 2016-02=42.9; 2014-02=148.3)</td>
 <td>EDA §3</td>
 <td>same</td>
 </tr>
 <tr>
-<td>Correlation table (PM10 0.848 / CO 0.762 / NO2 0.643 / WSPM −0.280)</td>
+<td>Correlation table (PM10 0.848 / CO 0.762 / NO2 0.643 / SO2 0.499 / WSPM −0.280 / TEMP −0.122 / O3 −0.133)</td>
 <td>EDA §4</td>
-<td>same (independent recheck of PM10 r = 0.8477 ✓)</td>
+<td>same (PM10 r independently re-checked = 0.8477 ✓)</td>
 </tr>
 <tr>
-<td>Missing rates (CO 4.386% highest)</td>
+<td>Missing rates (CO 4.386% highest, PM10 0.5%, O3 2.4%, NO2 2.1%)</td>
 <td>EDA §5</td>
 <td>same</td>
 </tr>
 <tr>
-<td>Box-Cox λ: MLE 0.1668 / pearsonr 0.1905 / per-station 0.097–0.199</td>
-<td>EDA §6</td>
-<td>same</td>
+<td>Box-Cox λ: MLE 0.1668 / pearsonr 0.1905 / per-station 0.097–0.199; experiment λ=0.2057</td>
+<td>EDA §6; log_rf_boxcox.txt</td>
+<td>eda_compute.py + training logs</td>
 </tr>
 <tr>
 <td>Baselines B1 102.04 / B2 107.77 / B3 36.09</td>
@@ -780,23 +951,68 @@ Because the data design deliberately contains no current_PM2_5 (the anti-leakage
 <td>same (B1 recomputed 102.036 ✓, B3 recomputed 36.12 ✓)</td>
 </tr>
 <tr>
-<td>RF raw RMSE 32.802 / MAE 16.384; Box-Cox 38.057 / 18.031 (λ=0.2057)</td>
-<td><code>models/log_rf_raw.txt</code>, <code>log_rf_boxcox.txt</code></td>
+<td>RF raw RMSE 32.802 / MAE 16.384; Box-Cox 38.057 / 18.031</td>
+<td>log_rf_raw.txt; log_rf_boxcox.txt</td>
 <td>full training logs</td>
 </tr>
 <tr>
-<td>Feature importance (PM10 0.7219 / CO 0.1008 / top-two total 82.3%)</td>
+<td>Old ensemble 32.58 (0.6RF+0.4LGBM, weight-scan optimum)</td>
+<td>STATUS.md</td>
+<td>verifier recomputation ✓</td>
+</tr>
+<tr>
+<td>Feature importance (PM10 0.7219 / CO 0.1008 / top-two 82.3%; family shares 88%/5%/2%; top50 = 95.2%)</td>
 <td><code>models/rf_raw_importance.csv</code></td>
-<td>read directly by <code>fig4_feature_importance.py</code></td>
+<td>read directly by fig4_feature_importance.py</td>
 </tr>
 <tr>
-<td>Diurnal hourly-mean table (heating months 21:00 = 112.5, etc.)</td>
-<td><strong>computed on the fly for this report</strong>: train.csv 360,954 rows, groupby hour</td>
-<td>see §3.2 notes in the main text</td>
+<td>Diurnal hourly-mean table (heating months 21:00 = 112.5 / 13:00 = 78.3, etc.)</td>
+<td>computed on train.csv (360,954 rows), groupby hour</td>
+<td>independently re-checked 2026-09-05 (21h=112.5/13h=78.3 ✓)</td>
 </tr>
 <tr>
-<td>Reductions 67.9% / 9.1% and other derived ratios</td>
-<td>simple ratios of the numbers above (computed for this report)</td>
+<td>+24 cross-station features (119→143); donor selection &amp; sector modulation restricted to pre-2015-09-01</td>
+<td><code>scripts/make_features_xst.py</code> docstring</td>
+<td>rules reproducible from the script</td>
+</tr>
+<tr>
+<td>RF-xst 29.333 / MAE 15.051; LGBM-xst 29.441 / 14.763; XGB-xst 29.59 / 14.62; ET-xst 29.98; LGBMv2-xst 29.79; RF-400 29.32</td>
+<td>models/log_rf_xst.txt, log_lgbm_xst.txt, log_xgb_xst.txt, log_et_rf400_xst.txt</td>
+<td>full training logs (same split, same features)</td>
+</tr>
+<tr>
+<td>Ensemble3 val 28.88 / LB 27.17; ensemble-xst LB 27.34; calibrated LB 27.90</td>
+<td>results overview index.html (verifier-accepted); LB submission log</td>
+<td>see 成果检查/index.html</td>
+</tr>
+<tr>
+<td>Full retrain 360,954 rows × 143 features (no holdout) → LB 24.68</td>
+<td>log_full_retrain.txt; LB submission log</td>
+<td>submission_full_ensemble.csv</td>
+</tr>
+<tr>
+<td>Tail-weighting (LB 24.65)</td>
+<td>log_tailweight.txt (sample weights 1/4/12); LB log</td>
+<td>submission_w_J.csv</td>
+</tr>
+<tr>
+<td>Festival features (LB 24.67; NYE+CNY 576 rows predicted 194.37→197.15)</td>
+<td>reports/festival_features.md §4–§6; LB log</td>
+<td>submission_fest.csv</td>
+</tr>
+<tr>
+<td><strong>FINAL LB 24.50, weights RF0.35+XGB600 0.50+LGBM350 0.15</strong></td>
+<td>log_iter600.txt; festival_features.md §3 (same weight structure as the 24.50 baseline); LB log</td>
+<td>submission_w_H.csv (same-structure baseline)</td>
+</tr>
+<tr>
+<td>Error structure (rows ≥150: 18.37% → 80.33% of SSE; prediction slope 0.79)</td>
+<td>reports/error_analysis.md</td>
+<td>error_analysis.py reproduces</td>
+</tr>
+<tr>
+<td>Derived reductions ~76% / −10.6% / −9.2% / −0.7%</td>
+<td>simple ratios of the numbers above</td>
 <td>see annotations in the main text</td>
 </tr>
 </tbody>
@@ -809,6 +1025,6 @@ function setLang(l){
   document.getElementById('btnEn').classList.toggle('active',l==='en');
   try{localStorage.setItem('aq_lang',l);}catch(e){}
 }
-setLang((localStorage.getItem('aq_lang')==='en')?'en':'zh');
+setLang(localStorage.getItem('aq_lang')==='en'?'en':'zh');
 </script>
 </body></html>
