@@ -38,14 +38,18 @@ section[lang="en"]{display:none}
 <tr><td>LGBM v2（lr=0.03，237轮）</td><td>32.96</td><td>16.10</td><td>单模型最优；但与RF更相似（相关0.9949），集成增益反降</td></tr>
 <tr><td>RF boxcox（实验）</td><td>38.06</td><td>18.03</td><td>目标变换实验：raw 胜，如实记录</td></tr>
 <tr><td><b>Random Forest（主导）</b></td><td><b>32.80</b></td><td><b>16.38</b></td><td>200树/深30/叶3</td></tr>
-<tr class="hl"><td>🏆 Ensemble 0.6RF+0.4LGBM</td><td><b>32.58</b></td><td>~16.1</td><td>权重扫描最优 → <b>推荐提交</b></td></tr>
+<tr class="hl"><td>🏆 Ensemble 0.6RF+0.4LGBM</td><td><b>32.58</b></td><td>~16.1</td><td>历史最优（已被 xst 超越）</td></tr>
 <tr><td>Ensemble v2（0.55RF+0.45LGBMv2）</td><td>32.60</td><td>~16.1</td><td>v2集成备选：单模型更强但互补性降</td></tr>
+<tr><td>🏆🏆 <b>RF-xst（跨站特征）</b></td><td><b>29.33</b></td><td>15.05</td><td>+24跨站风输送特征，单模型大突破</td></tr>
+<tr><td>LGBM-xst（跨站特征）</td><td>29.44</td><td>14.76</td><td>早停218轮</td></tr>
+<tr style="background:#e8f5e9!important"><td>🥇 <b>Ensemble-xst 0.55/0.45（当前主提交）</b></td><td><b>28.96</b></td><td>~14.9</td><td>⭐ <b>LB 实测 27.34</b>（验证集保守 1.6）</td></tr>
 </table>
 <p style="color:#666">所有数字经独立重算验收（做判分离）。特征：119 个（污染物/气象滞后 1-24h 小时网格对齐 + 滚动统计 + 时间环），防泄漏设计（无 PM2.5 自身滞后）。</p>
-<h2>2. 提交文件（4 份，全部已校验：51,063 行 / id 顺序=模板 / 无缺失）</h2>
+<h2>2. 提交文件（5 份，全部已校验：51,063 行 / id 顺序=模板 / 无缺失）</h2>
 <table>
 <tr><th>文件</th><th>验证 RMSE</th><th>用法</th></tr>
-<tr><td>submission_ensemble_w0.60.csv</td><td><b>32.58</b></td><td>🎯 <b>主提交（推荐）</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>submission_ensemble_xst.csv</td><td><b>28.96</b></td><td>🥇 <b>当前主提交（LB 实测 27.34 ✅）</b></td></tr>
+<tr><td>submission_ensemble_w0.60.csv</td><td>32.58</td><td>历史最优（xst 之前）</td></tr>
 <tr><td>submission_rf_raw.csv</td><td>32.80</td><td>备选</td></tr>
 <tr><td>submission_lgbm.csv</td><td>33.00</td><td>备选</td></tr>
 <tr><td>submission_ensemble_v2_w0.55.csv</td><td>32.60</td><td>备选（v2集成）</td></tr>
@@ -80,14 +84,18 @@ section[lang="en"]{display:none}
 <tr><td>LGBM v2 (lr=0.03, 237 rounds)</td><td>32.96</td><td>16.10</td><td>best single model; more similar to RF (corr 0.9949) → less ensemble gain</td></tr>
 <tr><td>RF boxcox (experiment)</td><td>38.06</td><td>18.03</td><td>target-transform experiment; raw wins, reported honestly</td></tr>
 <tr><td><b>Random Forest (lead)</b></td><td><b>32.80</b></td><td><b>16.38</b></td><td>200 trees / depth 30 / leaf 3</td></tr>
-<tr class="hl"><td>🏆 Ensemble 0.6 RF + 0.4 LGBM</td><td><b>32.58</b></td><td>~16.1</td><td>optimal weight by grid search → <b>recommended submission</b></td></tr>
+<tr class="hl"><td>🏆 Ensemble 0.6 RF + 0.4 LGBM</td><td><b>32.58</b></td><td>~16.1</td><td>previous best (superseded by xst)</td></tr>
 <tr><td>Ensemble v2 (0.55 RF + 0.45 LGBMv2)</td><td>32.60</td><td>~16.1</td><td>v2 blend backup: stronger single model but less complementarity</td></tr>
+<tr><td>🏆🏆 <b>RF-xst (cross-station features)</b></td><td><b>29.33</b></td><td>15.05</td><td>+24 wind-transport features; single-model breakthrough</td></tr>
+<tr><td>LGBM-xst (cross-station features)</td><td>29.44</td><td>14.76</td><td>early stop @218</td></tr>
+<tr style="background:#e8f5e9!important"><td>🥇 <b>Ensemble-xst 0.55/0.45 (current primary)</b></td><td><b>28.96</b></td><td>~14.9</td><td>⭐ <b>LB 27.34</b> (validation is conservative by ~1.6)</td></tr>
 </table>
 <p style="color:#666">Every number was independently recomputed and verified (separation of producer and verifier). Features: 119 (pollutant/meteorological lags of 1–24 h aligned to the true hourly grid + rolling statistics + cyclic time features), leakage-safe design (no PM2.5 self-lags).</p>
 <h2>2. Submission Files (all validated: 51,063 rows / id order matches template / no missing)</h2>
 <table>
 <tr><th>File</th><th>Val RMSE</th><th>Use</th></tr>
-<tr><td>submission_ensemble_w0.60.csv</td><td><b>32.58</b></td><td>🎯 <b>Primary (recommended)</b></td></tr>
+<tr style="background:#e8f5e9!important"><td>submission_ensemble_xst.csv</td><td><b>28.96</b></td><td>🥇 <b>Current primary (LB 27.34 ✅)</b></td></tr>
+<tr><td>submission_ensemble_w0.60.csv</td><td>32.58</td><td>previous best (pre-xst)</td></tr>
 <tr><td>submission_rf_raw.csv</td><td>32.80</td><td>backup</td></tr>
 <tr><td>submission_lgbm.csv</td><td>33.00</td><td>backup</td></tr>
 <tr><td>submission_ensemble_v2_w0.55.csv</td><td>32.60</td><td>backup (v2 blend)</td></tr>
